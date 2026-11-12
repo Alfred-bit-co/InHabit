@@ -63,10 +63,11 @@ html[data-theme='light'] .document-fields__sidebar-wrap {
 
 /* ───────────── Tableau de bord : on masque le cadre par défaut ───────────── */
 
-.template-default:has(.ih-dash) {
+body:has(.ih-dash) {
   .nav,
   .app-header,
   .template-default__nav-toggler-wrapper,
+  .template-default__nav-toggler-container,
   .nav-toggler,
   .step-nav {
     display: none !important;
@@ -275,7 +276,7 @@ html[data-theme='light'] .document-fields__sidebar-wrap {
   background: #f0453a;
   box-shadow: 0 0 0 2px #fff;
 }
-.ih-avatar {
+.ih-dash .ih-avatar {
   display: grid;
   place-items: center;
   width: 42px;
@@ -627,7 +628,7 @@ html[data-theme='light'] .document-fields__sidebar-wrap {
   background: #f6f6fb;
   border: 1px solid var(--ih-line);
   strong {
-    margin-top: auto;
+    margin-top: 6px;
     font-size: 0.92rem;
   }
   small {
@@ -636,6 +637,9 @@ html[data-theme='light'] .document-fields__sidebar-wrap {
   }
   &.on {
     height: 132px;
+    strong {
+      margin-top: auto;
+    }
     background: var(--ih-accent);
     border-color: transparent;
     color: #fff;
