@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "inhabit-dev", "runtimeExecutable": "npm", "runtimeArgs": ["--prefix", "inhabit-app", "run", "dev"], "port": 3000 }
+  ]
+}
