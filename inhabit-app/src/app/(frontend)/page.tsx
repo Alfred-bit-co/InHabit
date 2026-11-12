@@ -2,7 +2,6 @@
 import Link from 'next/link'
 import { HeroCarousel, type HeroSlide } from '@/components/HeroCarousel'
 import { CountUp } from '@/components/motion/CountUp'
-import { Marquee } from '@/components/motion/Marquee'
 import { SplitText } from '@/components/motion/SplitText'
 import { TextReveal } from '@/components/motion/TextReveal'
 import { Tilt } from '@/components/motion/Tilt'
@@ -87,14 +86,6 @@ export default async function HomePage() {
       {/* ───── Bandeau principal ───── */}
       <section className="hero">
         <div className="container">
-          <div className="hero-top fade-up">
-            <span className="status">
-              <i /> Ouvert aux nouveaux projets
-            </span>
-            <span>Architecture · Livre · YouTube</span>
-            <span>{settings.location || 'Japon — Afrique'}</span>
-          </div>
-
           <div className="hero-grid">
             <div>
               <h1 className="hero-title" aria-label={`${title} ${subtitle} ${accent}.`}>
@@ -141,7 +132,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <Marquee items={['Architecture', 'pensée spatiale', 'Livre CONCEPT', 'habiter', 'Concours', 'transmettre']} />
 
       {/* ───── Manifeste ───── */}
       <section id="decouvrir" className="section">
