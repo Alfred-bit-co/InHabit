@@ -6,7 +6,16 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
+/**
+ * Export statique (GitHub Pages) : `npm run export:static` définit ces variables
+ * pour servir le site sous /InHabit sans écraser le build normal (.next).
+ */
+const basePath = process.env.NEXT_BASE_PATH || undefined
+const distDir = process.env.NEXT_DIST_DIR || undefined
+
 const nextConfig: NextConfig = {
+  basePath,
+  distDir,
   images: {
     localPatterns: [
       {
