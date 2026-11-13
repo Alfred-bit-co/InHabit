@@ -59,7 +59,7 @@ export const Videos: CollectionConfig = {
       type: 'checkbox',
       label: 'Vidéo à la une (remplace la dernière vidéo sur l’accueil)',
       defaultValue: false,
-      admin: { position: 'sidebar' },
+      admin: { position: 'sidebar', components: { Cell: '/components/admin/BoolCell#BoolCell' } },
     },
   ],
   hooks: {

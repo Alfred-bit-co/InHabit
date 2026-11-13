@@ -103,7 +103,7 @@ export const Projects: CollectionConfig = {
       type: 'checkbox',
       label: 'Mettre en avant sur l’accueil',
       defaultValue: false,
-      admin: { position: 'sidebar' },
+      admin: { position: 'sidebar', components: { Cell: '/components/admin/BoolCell#BoolCell' } },
     },
     {
       name: 'order',

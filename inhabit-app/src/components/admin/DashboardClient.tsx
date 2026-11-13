@@ -25,8 +25,13 @@ export type Req = {
 }
 
 export type DashData = {
-  userName: string
+  firstName: string
+  fullName: string
+  role: string
+  photo: string | null
+  today: string
   initials: string
+  hero: { src: string | null; title: string; href: string } | null
   content: { news: number; projects: number; videos: number; events: number; publications: number }
   kpi: {
     toHandle: number
@@ -40,7 +45,6 @@ export type DashData = {
     line: number[]
     months: { month: string; label: string; short: string; displayed: number; remaining: number; capacity: number; full: boolean }[]
     price: string | null
-    illustration: string | null
   }
   requests: Req[]
 }
@@ -49,39 +53,20 @@ const A = '/admin'
 const col = (slug: string) => `${A}/collections/${slug}`
 const glob = (slug: string) => `${A}/globals/${slug}`
 
-/* ───────────── Icônes ───────────── */
+/* ───────────── Icônes (trait fin, comme sur le site) ───────────── */
 
-const paths: Record<string, React.ReactNode> = {
+const paths = {
   plus: <path d="M12 5v14M5 12h14" />,
-  arrowL: <path d="M19 12H5m6-6-6 6 6 6" />,
   arrowUR: <path d="M7 17 17 7M8 7h9v9" />,
+  arrowR: <path d="M5 12h14m-6-6 6 6-6 6" />,
   up: <path d="M12 19V5m-6 6 6-6 6 6" />,
   down: <path d="M12 5v14m6-6-6 6-6-6" />,
-  alert: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7.5v5.5M12 16.5v.5" />
-    </>
-  ),
   calendar: (
     <>
       <rect x="3.5" y="5" width="17" height="15.5" rx="3" />
       <path d="M3.5 10h17M8 3v4M16 3v4" />
     </>
   ),
-  clock: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
-    </>
-  ),
-  seat: (
-    <>
-      <rect x="3.5" y="6" width="17" height="13" rx="3" />
-      <path d="M3.5 10.5h17M8 15h3" />
-    </>
-  ),
-  sliders: <path d="M4 7h10m4 0h2M4 17h4m4 0h8M14 4v6M8 14v6" />,
   search: (
     <>
       <circle cx="11" cy="11" r="6.5" />
@@ -116,7 +101,12 @@ const paths: Record<string, React.ReactNode> = {
     </>
   ),
   trophy: <path d="M8 4h8v5a4 4 0 0 1-8 0Zm0 1.5H5a3 3 0 0 0 3 4m8-4h3a3 3 0 0 1-3 4M12 13v4m-3.5 3.5h7" />,
-  bulb: <path d="M9 18h6m-5 3h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z" />,
+  play: (
+    <>
+      <rect x="3" y="5.5" width="18" height="13" rx="3.5" />
+      <path d="m10.5 9.5 4 2.5-4 2.5Z" />
+    </>
+  ),
   globe: (
     <>
       <circle cx="12" cy="12" r="9" />
@@ -130,11 +120,10 @@ const paths: Record<string, React.ReactNode> = {
     </>
   ),
   open: <path d="M14 4h6v6m0-6-9 9M18 14v5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V7.5A1.5 1.5 0 0 1 5.5 6H10" />,
-  dots: (
+  user: (
     <>
-      <circle cx="12" cy="5.5" r="1.4" />
-      <circle cx="12" cy="12" r="1.4" />
-      <circle cx="12" cy="18.5" r="1.4" />
+      <circle cx="12" cy="8.5" r="3.8" />
+      <path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4" />
     </>
   ),
   layout: (
@@ -143,9 +132,12 @@ const paths: Record<string, React.ReactNode> = {
       <path d="M3.5 9.5h17M9.5 9.5v11" />
     </>
   ),
-}
+  check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
+} satisfies Record<string, React.ReactNode>
 
-function Icon({ name, size = 18 }: { name: keyof typeof paths; size?: number }) {
+type IconName = keyof typeof paths
+
+function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
   return (
     <svg
       width={size}
@@ -153,7 +145,7 @@ function Icon({ name, size = 18 }: { name: keyof typeof paths; size?: number }) 
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.7"
+      strokeWidth="1.6"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -168,14 +160,12 @@ function Trend({ value, label }: { value: number; label: string }) {
   return (
     <p className="ih-trend">
       <span className={up ? 'up' : 'down'}>
-        <Icon name={up ? 'up' : 'down'} size={13} /> {Math.abs(value)} %
+        <Icon name={up ? 'up' : 'down'} size={12} /> {Math.abs(value)} %
       </span>{' '}
       {label}
     </p>
   )
 }
-
-/* ───────────── Graphiques ───────────── */
 
 function Bars({ data }: { data: DashData['kpi']['bars'] }) {
   const max = Math.max(1, ...data.map((d) => d.value))
@@ -183,9 +173,10 @@ function Bars({ data }: { data: DashData['kpi']['bars'] }) {
     <div className="ih-bars" role="img" aria-label="Rendez-vous par mois">
       {data.map((d, i) => (
         <div key={d.label} className="ih-bar-col" title={`${d.label} : ${d.value} rendez-vous`}>
+          <em>{d.value || ''}</em>
           <div
-            className={`ih-bar${i === data.length - 1 || d.current ? ' strong' : ''}`}
-            style={{ height: `${Math.max(10, (d.value / max) * 100)}%`, animationDelay: `${i * 70}ms` }}
+            className={`ih-bar${d.current ? ' strong' : ''}`}
+            style={{ height: `${Math.max(6, (d.value / max) * 100)}%`, animationDelay: `${i * 60}ms` }}
           />
           <span>{d.label}</span>
         </div>
@@ -194,40 +185,15 @@ function Bars({ data }: { data: DashData['kpi']['bars'] }) {
   )
 }
 
-function Line({ data }: { data: number[] }) {
-  const w = 220
-  const h = 86
-  const max = Math.max(1, ...data)
-  const pts = data.map((v, i) => [8 + (i * (w - 16)) / (data.length - 1), h - 10 - (v / max) * (h - 26)] as const)
-  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ')
-  return (
-    <svg className="ih-line" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" role="img" aria-label="Messages reçus par semaine">
-      <defs>
-        <linearGradient id="ih-line-fill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" stopColor="var(--ih-accent)" stopOpacity="0.28" />
-          <stop offset="1" stopColor="var(--ih-accent)" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={`${d} L${pts.at(-1)![0]},${h} L${pts[0][0]},${h} Z`} fill="url(#ih-line-fill)" />
-      <path d={d} fill="none" stroke="var(--ih-accent)" strokeWidth="2" strokeLinejoin="round" pathLength={1} className="ih-line-stroke" />
-      {pts.map((p, i) => (
-        <circle key={i} cx={p[0]} cy={p[1]} r="3.2" fill="#fff" stroke="var(--ih-accent)" strokeWidth="2">
-          <title>{`${data[i]} message(s)`}</title>
-        </circle>
-      ))}
-    </svg>
-  )
-}
-
 /* ───────────── Menu « Publier » ───────────── */
 
-const publishItems = [
+const publishItems: { label: string; href: string; icon: IconName }[] = [
   { label: 'Une actualité', href: `${col('news')}/create`, icon: 'doc' },
   { label: 'Un projet', href: `${col('projects')}/create`, icon: 'layout' },
-  { label: 'Une vidéo YouTube', href: `${col('videos')}/create`, icon: 'image' },
+  { label: 'Une vidéo YouTube', href: `${col('videos')}/create`, icon: 'play' },
   { label: 'Un concours / événement', href: `${col('events')}/create`, icon: 'trophy' },
   { label: 'Une publication', href: `${col('publications')}/create`, icon: 'book' },
-] as const
+]
 
 function PublishMenu() {
   const [open, setOpen] = useState(false)
@@ -245,16 +211,14 @@ function PublishMenu() {
   }, [open])
   return (
     <div className="ih-publish" ref={ref}>
-      <button type="button" className="ih-btn-primary" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-        <Icon name="plus" /> Publier du contenu
+      <button type="button" className="ih-btn ih-btn-dark" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        <Icon name="plus" size={16} /> Publier
       </button>
       {open && (
         <div className="ih-menu" role="menu">
           {publishItems.map((it) => (
             <a key={it.href} href={it.href} role="menuitem">
-              <span className="ih-menu-ico">
-                <Icon name={it.icon} size={16} />
-              </span>
+              <Icon name={it.icon} size={16} />
               {it.label}
             </a>
           ))}
@@ -267,7 +231,7 @@ function PublishMenu() {
 /* ───────────── Tableau de bord ───────────── */
 
 const nav = [
-  { label: 'Vue d’ensemble', href: A, active: true },
+  { label: 'Tableau de bord', href: A, active: true },
   { label: 'Actualités', href: col('news') },
   { label: 'Projets', href: col('projects') },
   { label: 'Vidéos', href: col('videos') },
@@ -277,23 +241,15 @@ const nav = [
   { label: 'Pages', href: glob('home') },
 ]
 
-const tools = [
-  { label: 'Médiathèque', href: col('media'), icon: 'image' },
-  { label: 'Recherches & publications', href: col('publications'), icon: 'book' },
-  { label: 'Concours & événements', href: col('events'), icon: 'trophy' },
-  { label: 'Suggestions de sujets', href: col('topic-suggestions'), icon: 'bulb' },
-  { label: 'Voir le site', href: '/', icon: 'globe', external: true },
-] as const
-
 const kinds = [
-  { value: 'all', label: 'Toutes les demandes' },
+  { value: 'all', label: 'Tous les types' },
   { value: 'rdv', label: 'Rendez-vous' },
   { value: 'coaching', label: 'Accompagnement' },
-  { value: 'message', label: 'Messages de contact' },
+  { value: 'message', label: 'Messages' },
   { value: 'suggestion', label: 'Suggestions YouTube' },
 ]
 
-const tone: Record<string, string> = { rdv: 'a', coaching: 'b', message: 'c', suggestion: 'd' }
+const kindIcon: Record<Req['kind'], IconName> = { rdv: 'calendar', coaching: 'book', message: 'mail', suggestion: 'play' }
 
 const initialsOf = (name: string) =>
   name
@@ -303,15 +259,14 @@ const initialsOf = (name: string) =>
     .map((s) => s[0]!.toUpperCase())
     .join('') || '?'
 
+const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`
+
 export function DashboardClient({ data }: { data: DashData }) {
   const router = useRouter()
-  const { kpi, requests } = data
+  const { kpi, requests, content } = data
 
-  const [tab, setTab] = useState<'all' | 'rdv' | 'pending'>('all')
+  const [tab, setTab] = useState<'all' | 'pending' | 'rdv'>('all')
   const [kind, setKind] = useState('all')
-  const [state, setState] = useState<'all' | 'pending' | 'done'>('all')
-  const [from, setFrom] = useState('')
-  const [to, setTo] = useState('')
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<string | null>(requests[0]?.key ?? null)
   const [busy, setBusy] = useState(false)
@@ -323,18 +278,12 @@ export function DashboardClient({ data }: { data: DashData }) {
       if (tab === 'rdv' && r.kind !== 'rdv') return false
       if (tab === 'pending' && !r.pending) return false
       if (kind !== 'all' && r.kind !== kind) return false
-      if (state === 'pending' && !r.pending) return false
-      if (state === 'done' && r.pending) return false
-      const day = r.createdAt.slice(0, 10)
-      if (from && day < from) return false
-      if (to && day > to) return false
       if (s && !`${r.name} ${r.email} ${r.value} ${r.tiles.map((t) => t.value).join(' ')}`.toLowerCase().includes(s))
         return false
       return true
     })
-  }, [requests, tab, kind, state, from, to, search])
+  }, [requests, tab, kind, search])
 
-  const activeFilters = [kind !== 'all', state !== 'all', Boolean(from), Boolean(to), Boolean(search.trim())].filter(Boolean).length
   const current = filtered.find((r) => r.key === selected) ?? filtered[0] ?? null
   const pendingCount = requests.filter((r) => r.pending).length
   const rdvCount = requests.filter((r) => r.kind === 'rdv').length
@@ -358,250 +307,244 @@ export function DashboardClient({ data }: { data: DashData }) {
     }
   }
 
-  const resetFilters = () => {
-    setKind('all')
-    setState('all')
-    setFrom('')
-    setTo('')
-    setSearch('')
-  }
+  // Détails de la demande : cases + pied, sans doublons
+  const details = current
+    ? [...current.tiles, ...current.footer].filter(
+        (d, i, all) => all.findIndex((x) => x.label === d.label) === i && d.value && d.value !== '—',
+      )
+    : []
 
-  const next = kpi.months[0]
+  const contentRows: { label: string; count: number; href: string; icon: IconName }[] = [
+    { label: 'Actualités', count: content.news, href: col('news'), icon: 'doc' },
+    { label: 'Projets', count: content.projects, href: col('projects'), icon: 'layout' },
+    { label: 'Vidéos', count: content.videos, href: col('videos'), icon: 'play' },
+    { label: 'Concours & événements', count: content.events, href: col('events'), icon: 'trophy' },
+    { label: 'Recherches & publications', count: content.publications, href: col('publications'), icon: 'book' },
+  ]
 
   return (
     <div className="ih-dash">
       {/* ── Barre du haut ── */}
       <header className="ih-top">
-        <a href={A} className="ih-brand" aria-label="Tableau de bord">
-          <span className="ih-brand-mark" aria-hidden="true">
-            <span />
-            <span />
-          </span>
-          <span className="ih-brand-text">
-            <strong>
-              In<em>Habit</em>
-            </strong>
-            <small>Architecture, livre &amp; projets</small>
-          </span>
-        </a>
-
-        <a href="#demandes" className="ih-count" title="Demandes à traiter">
-          {pendingCount}
+        <a href={A} className="ih-brand" aria-label="Tableau de bord InHabit">
+          <span className="ih-logo-in">In</span>
+          <span className="ih-brand-name">Habit</span>
+          <small>Espace admin</small>
         </a>
 
         <nav className="ih-pills" aria-label="Sections de l’admin">
           {nav.map((n) => (
             <a key={n.href} href={n.href} className={n.active ? 'active' : undefined} aria-current={n.active ? 'page' : undefined}>
-              {n.active && <Icon name="plus" size={13} />}
               {n.label}
             </a>
           ))}
         </nav>
 
         <div className="ih-tools">
-          {tools.map((t) => (
-            <a
-              key={t.href}
-              href={t.href}
-              className="ih-icon-btn"
-              title={t.label}
-              aria-label={t.label}
-              {...('external' in t ? { target: '_blank', rel: 'noreferrer' } : {})}
-            >
-              <Icon name={t.icon} />
-            </a>
-          ))}
-          <span className="ih-sep" />
+          <a href="/" target="_blank" rel="noreferrer" className="ih-icon-btn" title="Voir le site" aria-label="Voir le site">
+            <Icon name="globe" />
+          </a>
+          <a href={col('media')} className="ih-icon-btn" title="Médiathèque" aria-label="Médiathèque">
+            <Icon name="image" />
+          </a>
           <a href="#demandes" className="ih-icon-btn ih-bell" title="Demandes à traiter" aria-label={`${pendingCount} demandes à traiter`}>
             <Icon name="bell" />
-            {pendingCount > 0 && <i />}
+            {pendingCount > 0 && <i>{pendingCount}</i>}
           </a>
           <a href={glob('site-settings')} className="ih-icon-btn" title="Réglages du site" aria-label="Réglages du site">
             <Icon name="gear" />
           </a>
           <a href={`${A}/account`} className="ih-avatar" title="Mon compte" aria-label="Mon compte">
-            {data.initials}
+            {data.photo ? <img src={data.photo} alt="" /> : data.initials}
           </a>
         </div>
       </header>
 
-      {/* ── Titre ── */}
-      <div className="ih-head">
-        <a href="/" className="ih-round" aria-label="Retour au site" target="_blank" rel="noreferrer">
-          <Icon name="arrowL" />
-        </a>
-        <div className="ih-head-text">
-          <h1>Tableau de bord</h1>
-          <p>
-            Bonjour {data.userName} — gérez vos contenus et toutes les demandes reçues en un seul endroit.{' '}
-            <span className="ih-content-line">
-              {data.content.news} actualités · {data.content.projects} projets · {data.content.videos} vidéos ·{' '}
-              {data.content.events} événements
-            </span>
+      {/* ── Accueil : bienvenue, image, profil ── */}
+      <section className="ih-hero">
+        <div className="ih-welcome">
+          <p className="ih-date">{data.today}</p>
+          <h1>
+            Bienvenue <span>{data.firstName}</span>
+          </h1>
+          <p className="ih-lead">
+            {kpi.toHandle > 0
+              ? `${plural(kpi.toHandle, 'demande attend', 'demandes attendent')} votre réponse. Tout le reste est à jour.`
+              : 'Toutes les demandes ont été traitées. Bonne journée de création.'}
           </p>
-        </div>
-        <div className="ih-head-actions">
-          <a href="#filtres" className="ih-round" title="Filtrer les demandes" aria-label="Filtrer les demandes">
-            <Icon name="sliders" />
-          </a>
-          <PublishMenu />
-        </div>
-      </div>
+          <div className="ih-actions">
+            <PublishMenu />
+            <a href="#demandes" className="ih-btn ih-btn-line">
+              Voir les demandes <Icon name="arrowR" size={16} />
+            </a>
+          </div>
 
-      {/* ── Cartes ── */}
-      <section className="ih-kpis">
-        <a className="ih-card ih-card-illu" href="#demandes">
-          <div className="ih-card-head">
-            <h2>Demandes à traiter</h2>
-            <span className="ih-ico red">
-              <Icon name="alert" />
+          <dl className="ih-stats">
+            <a href="#demandes">
+              <dt>Demandes à traiter</dt>
+              <dd>{kpi.toHandle}</dd>
+              <Trend value={kpi.weekTrend} label="sur 7 jours" />
+            </a>
+            <a href={col('appointments')}>
+              <dt>Rendez-vous à venir</dt>
+              <dd>{kpi.upcoming}</dd>
+              <Trend value={kpi.apptTrend} label="vs mois dernier" />
+            </a>
+            <a href={col('contact-messages')}>
+              <dt>Messages (30 j)</dt>
+              <dd>{kpi.last30}</dd>
+              <Trend value={kpi.inboundTrend} label="vs 30 j précédents" />
+            </a>
+          </dl>
+        </div>
+
+        {data.hero?.src ? (
+          <a className="ih-visual" href={data.hero.href}>
+            <img src={data.hero.src} alt="" />
+            <span className="ih-visual-tag">
+              <small>Projet à la une</small>
+              <strong>{data.hero.title}</strong>
             </span>
-          </div>
-          <p className="ih-value">{kpi.toHandle}</p>
-          <Trend value={kpi.weekTrend} label={`${kpi.thisWeek} reçue(s) cette semaine`} />
-          <div className="ih-illu">
-            {kpi.illustration ? <img src={kpi.illustration} alt="" /> : <div className="ih-illu-ph" />}
-          </div>
-        </a>
+            <span className="ih-visual-go" aria-hidden="true">
+              <Icon name="arrowUR" size={16} />
+            </span>
+          </a>
+        ) : (
+          <div className="ih-visual ih-visual-empty" />
+        )}
 
+        <aside className="ih-profile" aria-label="Profil">
+          <div className="ih-photo">
+            {data.photo ? <img src={data.photo} alt={data.fullName} /> : <span>{data.initials}</span>}
+          </div>
+          <strong>{data.fullName}</strong>
+          <small>{data.role}</small>
+          <div className="ih-profile-links">
+            <a href={glob('youtube-page')} title="Page YouTube" aria-label="Page YouTube">
+              <Icon name="play" size={17} />
+            </a>
+            <a href={glob('book')} title="Livre CONCEPT" aria-label="Livre CONCEPT">
+              <Icon name="book" size={17} />
+            </a>
+            <a href={`${A}/account`} title="Mon compte" aria-label="Mon compte">
+              <Icon name="user" size={17} />
+            </a>
+          </div>
+          <a href={glob('about')} className="ih-btn ih-btn-dark ih-btn-block">
+            Modifier mon profil
+          </a>
+        </aside>
+      </section>
+
+      {/* ── Trois cartes ── */}
+      <section className="ih-cards">
         <a className="ih-card" href={col('appointments')}>
           <div className="ih-card-head">
-            <h2>Rendez-vous à venir</h2>
-            <span className="ih-ico violet">
-              <Icon name="calendar" />
-            </span>
-          </div>
-          <p className="ih-value">{kpi.upcoming}</p>
-          <Trend value={kpi.apptTrend} label="par rapport au mois dernier" />
-          <Bars data={kpi.bars} />
-        </a>
-
-        <a className="ih-card" href={col('contact-messages')}>
-          <div className="ih-card-head">
-            <h2>Messages reçus (30 jours)</h2>
-            <span className="ih-ico blue">
-              <Icon name="clock" />
+            <h2>Rendez-vous</h2>
+            <span className="ih-corner" aria-hidden="true">
+              <Icon name="arrowUR" size={15} />
             </span>
           </div>
           <p className="ih-value">
-            {kpi.last30} <small>messages</small>
+            {kpi.upcoming} <small>à venir</small>
           </p>
-          <Trend value={kpi.inboundTrend} label="contacts et suggestions" />
-          <Line data={kpi.line} />
+          <Bars data={kpi.bars} />
         </a>
 
-        <div className="ih-card ih-card-seats">
+        <div className="ih-card">
           <div className="ih-card-head">
             <h2>Accompagnement CONCEPT</h2>
-            <span className="ih-ico green">
-              <Icon name="seat" />
-            </span>
+            {kpi.price && <span className="ih-chip">{kpi.price}</span>}
             <a href={glob('coaching')} className="ih-corner" aria-label="Gérer les mois et les places">
-              <Icon name="arrowUR" />
+              <Icon name="arrowUR" size={15} />
             </a>
           </div>
-          <div className="ih-seat-row">
-            <p className="ih-value">
-              {next ? next.displayed : 0} <small>place{next && next.displayed > 1 ? 's' : ''} affichée{next && next.displayed > 1 ? 's' : ''}</small>
-            </p>
-            {kpi.price && <span className="ih-chip">{kpi.price}</span>}
-          </div>
+          <p className="ih-value">
+            {kpi.months[0]?.displayed ?? 0} <small>{(kpi.months[0]?.displayed ?? 0) > 1 ? 'places affichées' : 'place affichée'}</small>
+          </p>
           <div className="ih-months">
-            {kpi.months.length === 0 && <p className="ih-empty-small">Aucun mois ouvert. Ajoutez-en dans Accompagnement.</p>}
+            {kpi.months.length === 0 && <p className="ih-muted">Aucun mois ouvert pour l’instant.</p>}
             {kpi.months.map((m, i) => (
               <a key={m.month} href={glob('coaching')} className={`ih-month${i === 0 ? ' on' : ''}${m.full ? ' full' : ''}`}>
+                <strong>{m.short}</strong>
                 <span className="ih-month-dots" aria-hidden="true">
                   {Array.from({ length: Math.min(6, m.capacity) }, (_, k) => (
                     <i key={k} className={k < m.capacity - m.remaining ? 'taken' : undefined} />
                   ))}
                 </span>
-                <strong>{m.short}</strong>
                 <small>{m.full ? 'Complet' : `${m.remaining}/${m.capacity} libres`}</small>
               </a>
             ))}
-            <a href={col('coaching-bookings')} className="ih-dark-btn">
-              Réservations
-            </a>
+          </div>
+          <a href={col('coaching-bookings')} className="ih-link">
+            Voir les réservations <Icon name="arrowR" size={15} />
+          </a>
+        </div>
+
+        <div className="ih-card">
+          <div className="ih-card-head">
+            <h2>Contenus du site</h2>
+          </div>
+          <ul className="ih-rows">
+            {contentRows.map((r) => (
+              <li key={r.href}>
+                <a href={r.href}>
+                  <span className="ih-row-ico">
+                    <Icon name={r.icon} size={16} />
+                  </span>
+                  <span>{r.label}</span>
+                  <b>{r.count}</b>
+                  <Icon name="arrowR" size={15} />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ── Demandes reçues ── */}
+      <section className="ih-inbox" id="demandes" aria-label="Demandes reçues">
+        <div className="ih-inbox-head">
+          <h2>Demandes reçues</h2>
+          <div className="ih-tabs" role="tablist">
+            <button type="button" role="tab" aria-selected={tab === 'all'} onClick={() => setTab('all')}>
+              Toutes <span>{requests.length}</span>
+            </button>
+            <button type="button" role="tab" aria-selected={tab === 'pending'} onClick={() => setTab('pending')}>
+              À traiter <span>{pendingCount}</span>
+            </button>
+            <button type="button" role="tab" aria-selected={tab === 'rdv'} onClick={() => setTab('rdv')}>
+              Rendez-vous <span>{rdvCount}</span>
+            </button>
+          </div>
+          <div className="ih-filters">
+            <label className="ih-field">
+              <span className="sr">Type de demande</span>
+              <select value={kind} onChange={(e) => setKind(e.target.value)}>
+                {kinds.map((k) => (
+                  <option key={k.value} value={k.value}>
+                    {k.label}
+                  </option>
+                ))}
+              </select>
+              <Icon name="chevron" size={15} />
+            </label>
+            <label className="ih-field ih-search">
+              <Icon name="search" size={16} />
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Rechercher…"
+                aria-label="Rechercher une demande"
+              />
+            </label>
           </div>
         </div>
-      </section>
 
-      {/* ── Filtres ── */}
-      <section className="ih-filters" id="filtres" aria-label="Filtres des demandes">
-        <p className="ih-filters-title">
-          Filtres actifs <span>{activeFilters}</span>
-          {activeFilters > 0 && (
-            <button type="button" onClick={resetFilters} className="ih-reset">
-              Effacer
-            </button>
-          )}
-        </p>
-        <label className="ih-field">
-          <span className="sr">Type de demande</span>
-          <select value={kind} onChange={(e) => setKind(e.target.value)}>
-            {kinds.map((k) => (
-              <option key={k.value} value={k.value}>
-                {k.label}
-              </option>
-            ))}
-          </select>
-          <Icon name="chevron" size={16} />
-        </label>
-        <label className="ih-field">
-          <span className="sr">Statut</span>
-          <select value={state} onChange={(e) => setState(e.target.value as typeof state)}>
-            <option value="all">Tous les statuts</option>
-            <option value="pending">À traiter / à venir</option>
-            <option value="done">Traités</option>
-          </select>
-          <Icon name="chevron" size={16} />
-        </label>
-        <label className="ih-field ih-date">
-          <span>Du</span>
-          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="Reçues à partir du" />
-        </label>
-        <label className="ih-field ih-date">
-          <span>Au</span>
-          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} aria-label="Reçues jusqu’au" />
-        </label>
-        <label className="ih-field ih-search">
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Nom, email, sujet…"
-            aria-label="Rechercher une demande"
-          />
-          <Icon name="search" />
-        </label>
-      </section>
-
-      {/* ── Demandes ── */}
-      <section className="ih-board" id="demandes" aria-label="Demandes reçues">
-        <div className="ih-tabs" role="tablist">
-          <button type="button" role="tab" aria-selected={tab === 'all'} onClick={() => setTab('all')}>
-            Toutes
-          </button>
-          <button type="button" role="tab" aria-selected={tab === 'rdv'} onClick={() => setTab('rdv')}>
-            Rendez-vous <span>{rdvCount}</span>
-          </button>
-          <button type="button" role="tab" aria-selected={tab === 'pending'} onClick={() => setTab('pending')}>
-            À traiter <span>{pendingCount}</span>
-          </button>
-        </div>
-        <div className="ih-board-tools">
-          <a href={col('contact-messages')} className="ih-ghost-ico" title="Tous les messages" aria-label="Tous les messages">
-            <Icon name="layout" />
-          </a>
-          <a href={col('appointments')} className="ih-ghost-ico" title="Tous les rendez-vous" aria-label="Tous les rendez-vous">
-            <Icon name="dots" />
-          </a>
-        </div>
-
-        <div className="ih-list-wrap">
-          <h2>Demandes reçues</h2>
+        <div className="ih-inbox-body">
           {filtered.length === 0 ? (
-            <p className="ih-empty">Aucune demande ne correspond à ces filtres.</p>
+            <p className="ih-empty">Aucune demande ne correspond.</p>
           ) : (
             <ul className="ih-list">
               {filtered.slice(0, 40).map((r) => (
@@ -612,110 +555,72 @@ export function DashboardClient({ data }: { data: DashData }) {
                     onClick={() => setSelected(r.key)}
                     aria-pressed={current?.key === r.key}
                   >
-                    <span className={`ih-av t-${tone[r.kind]}`}>{initialsOf(r.name)}</span>
+                    <span className="ih-av">{initialsOf(r.name)}</span>
                     <span className="ih-who">
-                      <strong>
-                        {r.title} · {r.name}
-                      </strong>
-                      <small>{r.when}</small>
+                      <strong>{r.name}</strong>
+                      <small>
+                        <Icon name={kindIcon[r.kind]} size={13} /> {r.title} · {r.when}
+                      </small>
                     </span>
                     <span className={`ih-status${r.pending ? ' hot' : ''}`}>{r.statusLabel}</span>
-                    <span className="ih-amount">{r.value}</span>
                   </button>
                 </li>
               ))}
             </ul>
           )}
-        </div>
 
-        <div className="ih-detail" aria-live="polite">
-          {!current ? (
-            <p className="ih-empty light">Sélectionnez une demande pour voir le détail.</p>
-          ) : (
-            <>
-              <div className="ih-detail-head">
-                <div>
-                  <small>Détails de la demande</small>
-                  <p className="ih-detail-title">
-                    # {current.title}
-                    <span className="ih-status">{current.statusLabel}</span>
-                  </p>
-                </div>
-                <div>
-                  <small>Type</small>
-                  <p className="ih-detail-kind">{current.kindLabel}</p>
-                </div>
-                <div>
-                  <small>Contact</small>
-                  <p className="ih-person">
-                    <span className={`ih-av t-${tone[current.kind]}`}>{initialsOf(current.name)}</span>
-                    <span>
-                      <strong>{current.name}</strong>
-                      <em>{current.email || 'Pas d’email'}</em>
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="ih-tiles">
-                {current.tiles.map((t) => (
-                  <div key={t.label} className="ih-tile">
-                    <p>{t.value || '—'}</p>
-                    <small>{t.label}</small>
-                    <Icon name="arrowUR" size={16} />
+          <div className="ih-detail" aria-live="polite">
+            {current && (
+              <>
+                <div className="ih-detail-head">
+                  <span className="ih-av lg">{initialsOf(current.name)}</span>
+                  <div>
+                    <small>{current.kindLabel}</small>
+                    <h3>{current.name}</h3>
+                    {current.email && <a href={`mailto:${current.email}`}>{current.email}</a>}
                   </div>
-                ))}
-                <a href={`${col(current.collection)}/${current.id}`} className="ih-tile ih-tile-add">
-                  <Icon name="open" />
-                  <span>Ouvrir la fiche</span>
-                </a>
-              </div>
+                  <span className={`ih-status${current.pending ? ' hot' : ''}`}>{current.statusLabel}</span>
+                </div>
 
-              {current.text && <p className="ih-text">{current.text}</p>}
+                <dl className="ih-facts">
+                  {details.map((d) => (
+                    <div key={d.label}>
+                      <dt>{d.label}</dt>
+                      <dd>{d.value}</dd>
+                    </div>
+                  ))}
+                </dl>
 
-              <div className="ih-detail-foot">
-                {current.footer.map((f) => (
-                  <div key={f.label}>
-                    <small>{f.label}</small>
-                    <p>{f.value}</p>
-                  </div>
-                ))}
-                <div className="ih-foot-actions">
+                {current.text && <blockquote className="ih-text">{current.text}</blockquote>}
+
+                <div className="ih-detail-actions">
+                  <a href={`${col(current.collection)}/${current.id}`} className="ih-btn ih-btn-line">
+                    <Icon name="open" size={16} /> Ouvrir la fiche
+                  </a>
                   {current.email && (
-                    <a
-                      href={`mailto:${current.email}`}
-                      className="ih-round light"
-                      title="Répondre par email"
-                      aria-label="Répondre par email"
-                    >
-                      <Icon name="mail" />
+                    <a href={`mailto:${current.email}`} className="ih-btn ih-btn-line">
+                      <Icon name="mail" size={16} /> Répondre
                     </a>
                   )}
-                  <a
-                    href={current.kind === 'rdv' ? glob('appointment-settings') : `${col(current.collection)}/${current.id}`}
-                    className="ih-round light"
-                    title={current.kind === 'rdv' ? 'Disponibilités' : 'Modifier'}
-                    aria-label={current.kind === 'rdv' ? 'Disponibilités' : 'Modifier'}
-                  >
-                    <Icon name="calendar" />
-                  </a>
                   {current.action ? (
                     <button
                       type="button"
-                      className="ih-btn-white"
+                      className="ih-btn ih-btn-accent"
                       disabled={busy}
                       onClick={() => updateStatus(current, current.action!.status)}
                     >
                       {busy ? 'Enregistrement…' : current.action.label}
                     </button>
                   ) : (
-                    <span className="ih-btn-white done">Traitée</span>
+                    <span className="ih-btn ih-btn-done">
+                      <Icon name="check" size={16} /> Traitée
+                    </span>
                   )}
                 </div>
-              </div>
-              {error && <p className="ih-error">{error}</p>}
-            </>
-          )}
+                {error && <p className="ih-error">{error}</p>}
+              </>
+            )}
+          </div>
         </div>
       </section>
     </div>

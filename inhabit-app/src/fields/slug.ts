@@ -36,5 +36,5 @@ export const publishedField: Field = {
   type: 'checkbox',
   label: 'Publié sur le site',
   defaultValue: true,
-  admin: { position: 'sidebar' },
+  admin: { position: 'sidebar', components: { Cell: '/components/admin/BoolCell#BoolCell' } },
 }

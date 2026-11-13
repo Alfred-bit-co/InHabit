@@ -50,7 +50,12 @@ export default buildConfig({
     meta: { titleSuffix: ' — InHabit admin' },
     // Admin toujours en clair (le client ne veut pas du thème sombre)
     theme: 'light',
+    avatar: { Component: '/components/admin/Graphics#Avatar' },
     components: {
+      graphics: {
+        Logo: '/components/admin/Graphics#Logo',
+        Icon: '/components/admin/Graphics#Icon',
+      },
       views: {
         dashboard: { Component: '/components/admin/Dashboard#Dashboard' },
       },
@@ -59,6 +64,17 @@ export default buildConfig({
   i18n: {
     supportedLanguages: { fr },
     fallbackLanguage: 'fr',
+    // Libellés plus naturels que la traduction par défaut
+    translations: {
+      fr: {
+        general: {
+          createNew: 'Ajouter',
+          createNewLabel: 'Ajouter — {{label}}',
+          true: 'Oui',
+          false: 'Non',
+        },
+      },
+    },
   },
   collections: [
     News,

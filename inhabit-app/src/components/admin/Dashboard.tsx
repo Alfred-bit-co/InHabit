@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import React from 'react'
-import type { Coaching } from '@/payload-types'
+import type { About, Coaching, Media } from '@/payload-types'
 import { computeMonths } from '@/lib/availability'
 import { formatMonthFr, toISODate, toISOMonth } from '@/lib/dates'
 import { CONTACT_REASONS } from '@/lib/constants'
@@ -72,7 +72,7 @@ export async function Dashboard({ payload, user }: Props) {
   const today = toISODate(now)
   const q = { limit: 500, depth: 0, pagination: false, overrideAccess: true } as const
 
-  const [coaching, appointments, messages, suggestions, coachingGlobal, project, counts] = await Promise.all([
+  const [coaching, appointments, messages, suggestions, coachingGlobal, project, counts, about] = await Promise.all([
     payload.find({ collection: 'coaching-bookings', sort: '-createdAt', ...q }),
     payload.find({ collection: 'appointments', sort: '-createdAt', ...q }),
     payload.find({ collection: 'contact-messages', sort: '-createdAt', ...q }),
@@ -84,6 +84,7 @@ export async function Dashboard({ payload, user }: Props) {
         payload.count({ collection: c, overrideAccess: true }).then((r) => r.totalDocs),
       ),
     ),
+    payload.findGlobal({ slug: 'about', depth: 1 }) as Promise<About>,
   ])
 
   /* ── Demandes reçues, toutes collections confondues ── */
@@ -261,18 +262,28 @@ export async function Dashboard({ payload, user }: Props) {
       capacity: coachingGlobal.months?.find((x) => x.month === m.month)?.capacity ?? 0,
     }))
 
-  const cover = project.docs[0]?.cover
-  const illustration =
-    cover && typeof cover === 'object' ? cover.sizes?.card?.url || cover.url || null : null
+  const img = (m: unknown, size: 'card' | 'large' | 'thumb') =>
+    m && typeof m === 'object' ? (m as Media).sizes?.[size]?.url || (m as Media).url || null : null
+
+  const featured = project.docs[0]
+  const founder = about.founder ?? {}
+  const fullName = founder.name || user?.name || user?.email?.split('@')[0] || 'Admin'
 
   const data: DashData = {
-    userName: user?.name || user?.email?.split('@')[0] || 'Admin',
-    initials: (user?.name || user?.email || 'A')
+    firstName: fullName.split(/\s+/)[0],
+    fullName,
+    role: founder.role || 'Architecte & auteur',
+    photo: img(founder.photo, 'card'),
+    today: now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+    initials: fullName
       .split(/[\s@.]+/)
       .filter(Boolean)
       .slice(0, 2)
-      .map((s) => s[0]!.toUpperCase())
+      .map((s: string) => s[0]!.toUpperCase())
       .join(''),
+    hero: featured
+      ? { src: img(featured.cover, 'large'), title: featured.title, href: `/admin/collections/projects/${featured.id}` }
+      : null,
     content: {
       news: counts[0],
       projects: counts[1],
@@ -292,7 +303,6 @@ export async function Dashboard({ payload, user }: Props) {
       line,
       months,
       price: coachingGlobal.price || null,
-      illustration,
     },
     requests: reqs,
   }
