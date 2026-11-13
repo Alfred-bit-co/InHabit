@@ -2,6 +2,7 @@ import { postgresAdapter } from '@payloadcms/db-postgres'
 import { sqliteAdapter } from '@payloadcms/db-sqlite'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { s3Storage } from '@payloadcms/storage-s3'
 import { fr } from '@payloadcms/translations/languages/fr'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -9,6 +10,7 @@ import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
 import { Events } from './collections/Events'
+import { migrations } from './migrations'
 import { Media } from './collections/Media'
 import { News } from './collections/News'
 import { Projects } from './collections/Projects'
@@ -23,10 +25,60 @@ const dirname = path.dirname(filename)
 
 const databaseUrl = process.env.DATABASE_URL || 'file:./inhabit.db'
 
-/** PostgreSQL en production (DATABASE_URL=postgres://…), SQLite en local. */
+/**
+ * PostgreSQL en production (DATABASE_URL=postgres://…, Supabase), SQLite en local.
+ *
+ * Avec Postgres :
+ * - les tables vivent dans le schéma « payload », que l'API publique de Supabase
+ *   n'expose pas (personne ne peut les lire avec la clé publique) ;
+ * - le schéma n'est jamais modifié automatiquement (push: false) : il évolue
+ *   uniquement par les migrations de src/migrations ;
+ * - en production, les migrations en attente s'appliquent toutes seules au démarrage.
+ */
 const db = databaseUrl.startsWith('postgres')
-  ? postgresAdapter({ pool: { connectionString: databaseUrl } })
+  ? postgresAdapter({
+      pool: { connectionString: databaseUrl, max: Number(process.env.DATABASE_POOL_MAX || 5) },
+      schemaName: 'payload',
+      push: false,
+      migrationDir: path.resolve(dirname, 'migrations'),
+      prodMigrations: migrations,
+    })
   : sqliteAdapter({ client: { url: databaseUrl } })
+
+/**
+ * Stockage des images sur Supabase Storage (API compatible S3) si les variables S3_*
+ * sont définies ; sinon les fichiers restent sur le disque (dossier media/), comme en local.
+ * Le bucket est public : les images sont servies directement par Supabase.
+ */
+const s3Enabled = Boolean(
+  process.env.S3_BUCKET && process.env.S3_ENDPOINT && process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY,
+)
+const s3PublicUrl = (process.env.S3_PUBLIC_URL || '').replace(/\/$/, '')
+
+const storage = s3Storage({
+  enabled: s3Enabled,
+  // Garde le même schéma de base, que le stockage cloud soit actif ou non
+  alwaysInsertFields: true,
+  bucket: process.env.S3_BUCKET || 'media',
+  collections: {
+    media: s3PublicUrl
+      ? {
+          disablePayloadAccessControl: true,
+          generateFileURL: ({ filename, prefix }) =>
+            `${s3PublicUrl}/${[prefix, filename].filter(Boolean).join('/')}`,
+        }
+      : true,
+  },
+  config: {
+    endpoint: process.env.S3_ENDPOINT,
+    region: process.env.S3_REGION || 'eu-west-3',
+    forcePathStyle: true,
+    credentials: {
+      accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+    },
+  },
+})
 
 /** Envoi d'emails si un serveur SMTP est configuré ; sinon les emails sont affichés dans la console. */
 const email = process.env.SMTP_HOST
@@ -97,5 +149,5 @@ export default buildConfig({
   db,
   email,
   sharp,
-  plugins: [],
+  plugins: [storage],
 })
