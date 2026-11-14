@@ -7,9 +7,13 @@ export const Events: CollectionConfig = {
   labels: { singular: 'Concours / événement', plural: 'Concours & événements' },
   defaultSort: '-startDate',
   admin: {
-    group: 'Contenu',
+    group: 'Mes contenus',
     useAsTitle: 'title',
     defaultColumns: ['title', 'type', 'status', 'startDate', 'published'],
+    hideAPIURL: true,
+    components: {
+      Description: { path: '/components/admin/Description#Description', clientProps: { text: 'Annoncez vos concours, événements et conférences, avec les dates et les modalités de participation.' } },
+    },
   },
   access: { read: publishedOrLoggedIn, create: isLoggedIn, update: isLoggedIn, delete: isLoggedIn },
   fields: [

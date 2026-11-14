@@ -5,12 +5,16 @@ import { countryOptions, OUTSIDE_AFRICA } from '../lib/africa'
 
 export const Projects: CollectionConfig = {
   slug: 'projects',
-  labels: { singular: 'Projet architectural', plural: 'Projets architecturaux' },
+  labels: { singular: 'Projet', plural: 'Projets' },
   defaultSort: 'order',
   admin: {
-    group: 'Contenu',
+    group: 'Mes contenus',
     useAsTitle: 'title',
-    defaultColumns: ['title', 'country', 'year', 'status', 'featured', 'published'],
+    defaultColumns: ['title', 'country', 'year', 'featured', 'published'],
+    hideAPIURL: true,
+    components: {
+      Description: { path: '/components/admin/Description#Description', clientProps: { text: 'Ajoutez ou modifiez vos projets : textes, images, pays sur la carte. Cochez « Mettre en avant » pour l’afficher sur l’accueil.' } },
+    },
   },
   access: { read: publishedOrLoggedIn, create: isLoggedIn, update: isLoggedIn, delete: isLoggedIn },
   fields: [

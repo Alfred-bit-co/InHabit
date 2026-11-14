@@ -249,6 +249,15 @@ const kinds = [
   { value: 'suggestion', label: 'Suggestions YouTube' },
 ]
 
+const shortcuts: { label: string; hint: string; href: string; icon: IconName; external?: boolean }[] = [
+  { label: 'Voir les demandes', hint: 'Rendez-vous, messages…', href: '#demandes', icon: 'bell' },
+  { label: 'Ajouter un projet', hint: 'Nouveau projet', href: `${col('projects')}/create`, icon: 'layout' },
+  { label: 'Publier une actualité', hint: 'Annonce, concours…', href: `${col('news')}/create`, icon: 'doc' },
+  { label: 'Ajouter une vidéo', hint: 'Lien YouTube', href: `${col('videos')}/create`, icon: 'play' },
+  { label: 'Page d’accueil', hint: 'Modifier les textes', href: glob('home'), icon: 'image' },
+  { label: 'Voir le site', hint: 'Nouvel onglet', href: '/', icon: 'globe', external: true },
+]
+
 const kindIcon: Record<Req['kind'], IconName> = { rdv: 'calendar', coaching: 'book', message: 'mail', suggestion: 'play' }
 
 const initialsOf = (name: string) =>
@@ -435,6 +444,21 @@ export function DashboardClient({ data }: { data: DashData }) {
           </a>
         </aside>
       </section>
+
+      {/* ── Raccourcis : les actions les plus fréquentes, en un clic ── */}
+      <nav className="ih-shortcuts" aria-label="Raccourcis">
+        {shortcuts.map((s) => (
+          <a key={s.label} href={s.href} {...(s.external ? { target: '_blank', rel: 'noreferrer' } : {})}>
+            <span className="ih-shortcut-ico">
+              <Icon name={s.icon} size={18} />
+            </span>
+            <span>
+              <strong>{s.label}</strong>
+              <small>{s.hint}</small>
+            </span>
+          </a>
+        ))}
+      </nav>
 
       {/* ── Trois cartes ── */}
       <section className="ih-cards">
