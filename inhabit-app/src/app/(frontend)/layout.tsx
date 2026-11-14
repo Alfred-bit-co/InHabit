@@ -26,7 +26,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: process.env.NEXT_PUBLIC_SERVER_URL ? new URL(process.env.NEXT_PUBLIC_SERVER_URL) : undefined,
     title: { default: `${name} — Architecture, livre et projets`, template: `%s — ${name}` },
-    description: settings.tagline || undefined,
+    description:
+      settings.tagline ||
+      'InHabit_Archi, l’architecte Warren Riad AYITOU : chaîne YouTube, livre CONCEPT, accompagnement et projets d’architecture entre l’Afrique et le Japon.',
     openGraph: { siteName: name, locale: 'fr_FR', type: 'website' },
   }
 }
