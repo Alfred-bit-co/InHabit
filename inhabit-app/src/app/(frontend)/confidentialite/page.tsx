@@ -1,16 +1,14 @@
 import type { Metadata } from 'next'
-import { getSettings } from '@/lib/payload'
 
 export const metadata: Metadata = { title: 'Politique de confidentialité', robots: { index: false } }
 
 export default async function PrivacyPage() {
-  const settings = await getSettings()
-  const email = settings.contactEmail || '[adresse e-mail à compléter]'
+  const email = 'ayitouw@gmail.com'
   return (
     <section className="section-tight">
       <div className="container prose">
         <h1 style={{ fontSize: 'clamp(2.2rem, 5vw, 3.6rem)' }}>Politique de confidentialité</h1>
-        <p className="muted">Dernière mise à jour : [date à compléter]</p>
+        <p className="muted">Dernière mise à jour : 14 novembre 2026</p>
 
         <h2>1. Responsable du traitement</h2>
         <p>
@@ -47,11 +45,16 @@ export default async function PrivacyPage() {
             le mode « confidentialité renforcée » (youtube-nocookie.com).
           </li>
           <li>
-            <strong>Hébergement</strong> : [nom de l’hébergeur et de la base de données à compléter].
+            <strong>Hébergement du site</strong> : Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723,
+            États-Unis.
           </li>
           <li>
-            <strong>Envoi d’emails</strong> : [service d’envoi à compléter], uniquement pour les notifications et
-            confirmations.
+            <strong>Hébergement des données</strong> (base de données et images) : Supabase, serveurs situés à Paris
+            (France).
+          </li>
+          <li>
+            <strong>Envoi d’emails</strong> : uniquement pour les notifications et confirmations liées à vos
+            demandes.
           </li>
         </ul>
 
@@ -60,8 +63,7 @@ export default async function PrivacyPage() {
 
         <h2>5. Durée de conservation</h2>
         <p>
-          Les demandes sont conservées le temps nécessaire à leur traitement, puis au maximum [durée à préciser, ex.
-          3 ans] avant suppression.
+          Les demandes sont conservées 3 ans après le dernier échange, puis supprimées.
         </p>
 
         <h2>6. Vos droits</h2>
