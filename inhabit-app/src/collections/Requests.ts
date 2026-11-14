@@ -5,7 +5,7 @@ import { emailTable, escapeHtml } from '../lib/escape'
 import { formatDateFr, formatMonthFr } from '../lib/dates'
 import { CONTACT_REASONS } from '../lib/constants'
 
-const GROUP = 'Demandes reçues'
+const GROUP = 'Demandes'
 
 const statusField = (options: { label: string; value: string }[], defaultValue: string) => ({
   name: 'status',
@@ -50,12 +50,13 @@ const coachingStatusMail: CollectionAfterChangeHook = async ({ doc, previousDoc,
 
 export const CoachingBookings: CollectionConfig = {
   slug: 'coaching-bookings',
-  labels: { singular: 'Réservation accompagnement', plural: 'Réservations accompagnement' },
+  labels: { singular: 'Réservation d’accompagnement', plural: 'Réservations d’accompagnement' },
   defaultSort: '-createdAt',
   admin: {
     group: GROUP,
     useAsTitle: 'name',
-    defaultColumns: ['name', 'month', 'status', 'email', 'createdAt'],
+    defaultColumns: ['name', 'month', 'status', 'createdAt'],
+    hideAPIURL: true,
     description:
       'Passez une réservation en « Confirmée » pour envoyer automatiquement un email de confirmation au participant.',
   },
@@ -148,7 +149,8 @@ export const Appointments: CollectionConfig = {
   admin: {
     group: GROUP,
     useAsTitle: 'name',
-    defaultColumns: ['name', 'date', 'slot', 'status', 'email'],
+    defaultColumns: ['name', 'date', 'slot', 'status'],
+    hideAPIURL: true,
     description:
       'Les créneaux réservés disparaissent automatiquement du site. Passez un rendez-vous en « Annulé » pour libérer le créneau et prévenir le visiteur.',
   },
@@ -238,12 +240,16 @@ export const Appointments: CollectionConfig = {
 
 export const ContactMessages: CollectionConfig = {
   slug: 'contact-messages',
-  labels: { singular: 'Message de contact', plural: 'Messages de contact' },
+  labels: { singular: 'Message', plural: 'Messages' },
   defaultSort: '-createdAt',
   admin: {
     group: GROUP,
     useAsTitle: 'subject',
     defaultColumns: ['subject', 'name', 'reason', 'status', 'createdAt'],
+    hideAPIURL: true,
+    components: {
+      Description: { path: '/components/admin/Description#Description', clientProps: { text: 'Les messages envoyés depuis le formulaire de contact. Passez-les en « Traité » une fois la réponse envoyée.' } },
+    },
   },
   access: adminOnly,
   fields: [
@@ -288,12 +294,16 @@ export const ContactMessages: CollectionConfig = {
 
 export const TopicSuggestions: CollectionConfig = {
   slug: 'topic-suggestions',
-  labels: { singular: 'Suggestion de sujet', plural: 'Suggestions de sujets' },
+  labels: { singular: 'Suggestion de vidéo', plural: 'Suggestions de vidéos' },
   defaultSort: '-createdAt',
   admin: {
     group: GROUP,
     useAsTitle: 'topic',
     defaultColumns: ['topic', 'name', 'status', 'createdAt'],
+    hideAPIURL: true,
+    components: {
+      Description: { path: '/components/admin/Description#Description', clientProps: { text: 'Les idées de vidéos proposées par les visiteurs. Passez une idée en « Retenue » si vous comptez la traiter.' } },
+    },
   },
   access: adminOnly,
   fields: [

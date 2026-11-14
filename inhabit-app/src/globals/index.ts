@@ -8,7 +8,15 @@ const access = { read: anyone, update: isLoggedIn }
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: 'Réglages du site',
-  admin: { group: 'Paramètres' },
+  admin: {
+    group: 'Réglages',
+    hideAPIURL: true,
+    components: {
+      elements: {
+        Description: { path: '/components/admin/Description#Description', clientProps: { text: 'Nom du site, email de contact, adresse qui reçoit les notifications, chaîne YouTube et réseaux sociaux.' } },
+      },
+    },
+  },
   access,
   fields: [
     { name: 'siteName', type: 'text', label: 'Nom du site', defaultValue: 'InHabit_Archi' },
@@ -85,7 +93,15 @@ export const SiteSettings: GlobalConfig = {
 export const HomePage: GlobalConfig = {
   slug: 'home',
   label: 'Page d’accueil',
-  admin: { group: 'Pages' },
+  admin: {
+    group: 'Mon site',
+    hideAPIURL: true,
+    components: {
+      elements: {
+        Description: { path: '/components/admin/Description#Description', clientProps: { text: 'Les textes et images de la page d’accueil : bandeau, carrousel, présentation et appels à l’action.' } },
+      },
+    },
+  },
   access,
   fields: [
     {
@@ -178,7 +194,15 @@ export const HomePage: GlobalConfig = {
 export const YoutubePage: GlobalConfig = {
   slug: 'youtube-page',
   label: 'Page YouTube',
-  admin: { group: 'Pages' },
+  admin: {
+    group: 'Mon site',
+    hideAPIURL: true,
+    components: {
+      elements: {
+        Description: { path: '/components/admin/Description#Description', clientProps: { text: 'La présentation de la chaîne, la ligne éditoriale et les sujets qui intéressent la communauté.' } },
+      },
+    },
+  },
   access,
   fields: [
     { name: 'title', type: 'text', label: 'Titre', defaultValue: 'Penser l’espace, en vidéo.' },
@@ -208,7 +232,15 @@ export const YoutubePage: GlobalConfig = {
 export const Book: GlobalConfig = {
   slug: 'book',
   label: 'Livre CONCEPT',
-  admin: { group: 'Produits & services' },
+  admin: {
+    group: 'Mon site',
+    hideAPIURL: true,
+    components: {
+      elements: {
+        Description: { path: '/components/admin/Description#Description', clientProps: { text: 'La présentation du livre, ses éditions, ses prix, ses liens de commande et ses extraits.' } },
+      },
+    },
+  },
   access,
   fields: [
     {
@@ -271,7 +303,15 @@ export const Book: GlobalConfig = {
 export const Coaching: GlobalConfig = {
   slug: 'coaching',
   label: 'Accompagnement CONCEPT',
-  admin: { group: 'Produits & services' },
+  admin: {
+    group: 'Mon site',
+    hideAPIURL: true,
+    components: {
+      elements: {
+        Description: { path: '/components/admin/Description#Description', clientProps: { text: 'Le tarif, les objectifs, les modalités, et les mois ouverts avec le nombre de places affichées.' } },
+      },
+    },
+  },
   access,
   fields: [
     { name: 'title', type: 'text', label: 'Titre', defaultValue: 'Accompagnement CONCEPT' },
@@ -331,8 +371,16 @@ export const Coaching: GlobalConfig = {
 
 export const AppointmentSettings: GlobalConfig = {
   slug: 'appointment-settings',
-  label: 'Rendez-vous — disponibilités',
-  admin: { group: 'Produits & services' },
+  label: 'Mes disponibilités (rendez-vous)',
+  admin: {
+    group: 'Mon site',
+    hideAPIURL: true,
+    components: {
+      elements: {
+        Description: { path: '/components/admin/Description#Description', clientProps: { text: 'Les jours et créneaux proposés aux visiteurs pour un rendez-vous gratuit.' } },
+      },
+    },
+  },
   access,
   fields: [
     { name: 'title', type: 'text', label: 'Titre', defaultValue: 'Rendez-vous architectural' },
@@ -403,7 +451,15 @@ export const AppointmentSettings: GlobalConfig = {
 export const AboutPage: GlobalConfig = {
   slug: 'about',
   label: 'Page À propos',
-  admin: { group: 'Pages' },
+  admin: {
+    group: 'Mon site',
+    hideAPIURL: true,
+    components: {
+      elements: {
+        Description: { path: '/components/admin/Description#Description', clientProps: { text: 'Votre présentation, votre parcours, vos collaborateurs, vos partenaires et vos coordonnées. Votre photo de profil se change ici.' } },
+      },
+    },
+  },
   access,
   fields: [
     {

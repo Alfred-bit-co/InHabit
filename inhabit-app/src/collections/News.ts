@@ -7,9 +7,10 @@ export const News: CollectionConfig = {
   labels: { singular: 'Actualité', plural: 'Actualités' },
   defaultSort: '-date',
   admin: {
-    group: 'Contenu',
+    group: 'Mes contenus',
     useAsTitle: 'title',
     defaultColumns: ['title', 'type', 'date', 'published'],
+    hideAPIURL: true,
     description: 'Concours en cours, événements, conférences et annonces affichés sur l’accueil.',
   },
   access: { read: publishedOrLoggedIn, create: isLoggedIn, update: isLoggedIn, delete: isLoggedIn },

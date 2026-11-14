@@ -128,6 +128,71 @@ html[data-theme='light'] .nav__link.active {
   font-weight: 600;
 }
 
+/* « Ce que vous pouvez faire ici » : courte description en haut des listes et des pages */
+.ih-desc {
+  margin: 4px 0 0;
+  max-width: 72ch;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--ih-muted);
+}
+
+/* Ordre du menu, du plus utilisé au moins utilisé.
+   Fait en CSS pour ne pas changer l'ordre de la configuration (et donc payload-types.ts). */
+.nav-group {
+  order: 5; /* priorité basse : les règles par groupe ci-dessous l'emportent */
+}
+#nav-group-Demandes {
+  order: 1;
+}
+[id='nav-group-Mon site'] {
+  order: 2;
+}
+[id='nav-group-Mes contenus'] {
+  order: 3;
+}
+[id='nav-group-Réglages'] {
+  order: 4;
+}
+.nav__controls {
+  order: 10;
+}
+.nav-group__content {
+  display: flex;
+  flex-direction: column;
+}
+#nav-appointments,
+#nav-global-home,
+#nav-projects,
+#nav-global-site-settings {
+  order: 1;
+}
+#nav-coaching-bookings,
+#nav-global-youtube-page,
+#nav-news,
+#nav-users {
+  order: 2;
+}
+#nav-contact-messages,
+#nav-global-about,
+#nav-publications,
+#nav-media {
+  order: 3;
+}
+#nav-topic-suggestions,
+#nav-global-book,
+#nav-events,
+#nav-video-themes {
+  order: 4;
+}
+#nav-global-coaching,
+#nav-videos {
+  order: 5;
+}
+#nav-global-appointment-settings {
+  order: 6;
+}
+
 /* Barre du haut et fil d'Ariane */
 html[data-theme='light'] .app-header {
   background: color-mix(in srgb, var(--ih-bg) 88%, transparent);
@@ -889,6 +954,63 @@ body:has(.ih-dash) {
   }
 }
 
+/* ── Raccourcis ── */
+
+.ih-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+  a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 14px;
+    border-radius: 18px;
+    background: var(--ih-paper);
+    border: 1px solid var(--ih-line);
+    transition: border-color 0.2s, transform 0.2s;
+    > span:last-child {
+      display: grid;
+      min-width: 0;
+    }
+    strong {
+      font-size: 0.86rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    small {
+      font-size: 0.72rem;
+      color: var(--ih-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    &:hover {
+      border-color: var(--ih-line-strong);
+      transform: translateY(-2px);
+      .ih-shortcut-ico {
+        background: var(--ih-accent);
+        color: #fff;
+      }
+    }
+  }
+}
+.ih-shortcut-ico {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--ih-bg);
+  color: var(--ih-ink-2);
+  transition: background 0.2s, color 0.2s;
+}
+
 /* ── Cartes ── */
 
 .ih-cards {
@@ -1422,6 +1544,11 @@ a.ih-card:hover {
     display: none;
   }
 }
+@media (max-width: 1280px) {
+  .ih-shortcuts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
 @media (max-width: 1020px) {
   .ih-cards {
     grid-template-columns: 1fr 1fr;
@@ -1447,6 +1574,9 @@ a.ih-card:hover {
   }
 }
 @media (max-width: 720px) {
+  .ih-shortcuts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .ih-hero,
   .ih-cards {
     grid-template-columns: 1fr;

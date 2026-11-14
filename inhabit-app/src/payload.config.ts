@@ -122,6 +122,7 @@ export default buildConfig({
         general: {
           createNew: 'Ajouter',
           createNewLabel: 'Ajouter — {{label}}',
+          creatingNewLabel: 'Nouveau — {{label}}',
           true: 'Oui',
           false: 'Non',
         },

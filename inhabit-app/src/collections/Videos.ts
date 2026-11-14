@@ -6,12 +6,26 @@ export const VideoThemes: CollectionConfig = {
   slug: 'video-themes',
   labels: { singular: 'Thématique vidéo', plural: 'Thématiques vidéo' },
   defaultSort: 'order',
-  admin: { group: 'YouTube', useAsTitle: 'name', defaultColumns: ['name', 'order'] },
+  admin: {
+    group: 'Réglages',
+    useAsTitle: 'name',
+    defaultColumns: ['name', 'description'],
+    hideAPIURL: true,
+    components: {
+      Description: { path: '/components/admin/Description#Description', clientProps: { text: 'Les thèmes qui servent à classer les vidéos sur la page YouTube.' } },
+    },
+  },
   access: { read: anyone, create: isLoggedIn, update: isLoggedIn, delete: isLoggedIn },
   fields: [
     { name: 'name', type: 'text', label: 'Nom', required: true },
     { name: 'description', type: 'textarea', label: 'Description' },
-    { name: 'order', type: 'number', label: 'Ordre', defaultValue: 0 },
+    {
+      name: 'order',
+      type: 'number',
+      label: 'Ordre d’affichage',
+      defaultValue: 0,
+      admin: { position: 'sidebar' },
+    },
   ],
 }
 
@@ -20,9 +34,10 @@ export const Videos: CollectionConfig = {
   labels: { singular: 'Vidéo', plural: 'Vidéos' },
   defaultSort: '-publishedAt',
   admin: {
-    group: 'YouTube',
+    group: 'Mes contenus',
     useAsTitle: 'title',
     defaultColumns: ['title', 'theme', 'publishedAt', 'featured'],
+    hideAPIURL: true,
     description:
       'Les dernières vidéos de la chaîne s’affichent automatiquement. Ajoutez ici les vidéos à classer par thématique ou à mettre en avant.',
   },

@@ -3,7 +3,14 @@ import type { CollectionConfig } from 'payload'
 export const Media: CollectionConfig = {
   slug: 'media',
   labels: { singular: 'Média', plural: 'Médiathèque' },
-  admin: { group: 'Contenu', defaultColumns: ['filename', 'alt', 'updatedAt'] },
+  admin: {
+    group: 'Réglages',
+    defaultColumns: ['filename', 'alt', 'updatedAt'],
+    hideAPIURL: true,
+    components: {
+      Description: { path: '/components/admin/Description#Description', clientProps: { text: 'Toutes les images et tous les PDF du site. Pensez à décrire chaque image (utile pour l’accessibilité et Google).' } },
+    },
+  },
   access: {
     read: () => true,
   },

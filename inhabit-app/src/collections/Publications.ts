@@ -7,9 +7,13 @@ export const Publications: CollectionConfig = {
   labels: { singular: 'Recherche / publication', plural: 'Recherches & publications' },
   defaultSort: '-date',
   admin: {
-    group: 'Contenu',
+    group: 'Mes contenus',
     useAsTitle: 'title',
     defaultColumns: ['title', 'type', 'date', 'published'],
+    hideAPIURL: true,
+    components: {
+      Description: { path: '/components/admin/Description#Description', clientProps: { text: 'Publiez vos études, articles et travaux en cours. Un PDF peut être joint à chaque publication.' } },
+    },
   },
   access: { read: publishedOrLoggedIn, create: isLoggedIn, update: isLoggedIn, delete: isLoggedIn },
   fields: [
