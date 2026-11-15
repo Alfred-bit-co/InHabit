@@ -14,11 +14,11 @@ export function TextReveal({ text, as: Tag = 'p' }: { text: string; as?: 'p' | '
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setLit(words.length)
-      return
-    }
     let id = 0
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      id = requestAnimationFrame(() => setLit(words.length))
+      return () => cancelAnimationFrame(id)
+    }
     const update = () => {
       const r = el.getBoundingClientRect()
       const vh = window.innerHeight

@@ -24,12 +24,18 @@ export function AppointmentForm({ days, timezone }: { days: DayAvailability[]; t
 
   const slots = useMemo(() => days.find((d) => d.date === date)?.slots ?? [], [days, date])
 
-  useEffect(() => {
+  // Demande envoyée : on vide le choix de date et de créneau
+  const [lastState, setLastState] = useState(state)
+  if (state !== lastState) {
+    setLastState(state)
     if (state.ok) {
       setDate('')
       setSlot('')
     }
-    // Créneau pris entre-temps : recharge les disponibilités
+  }
+
+  // Créneau pris entre-temps : recharge les disponibilités
+  useEffect(() => {
     if (state.errors?.slot) router.refresh()
   }, [state, router])
 

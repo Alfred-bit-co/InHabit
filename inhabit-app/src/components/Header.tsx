@@ -24,7 +24,12 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [hidden, setHidden] = useState(false)
 
-  useEffect(() => setOpen(false), [pathname])
+  // Ferme le menu mobile quand on change de page
+  const [lastPath, setLastPath] = useState(pathname)
+  if (pathname !== lastPath) {
+    setLastPath(pathname)
+    setOpen(false)
+  }
 
   // Fond « verre dépoli » après le haut de page, masqué quand on descend
   useEffect(() => {

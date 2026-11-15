@@ -1,18 +1,22 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 
 type Theme = 'light' | 'dark'
 
 /** Script exécuté avant l'affichage : applique le mode choisi (ou celui de l'appareil) sans flash. */
 export const themeScript = `(function(){try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','light')}})()`
 
-export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>('light')
+/** Suit l'attribut data-theme de <html> (posé par themeScript avant l'affichage). */
+const subscribeTheme = (onChange: () => void) => {
+  const observer = new MutationObserver(onChange)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  return () => observer.disconnect()
+}
+const readTheme = (): Theme => (document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light')
 
-  useEffect(() => {
-    setTheme((document.documentElement.getAttribute('data-theme') as Theme) || 'light')
-  }, [])
+export function ThemeToggle() {
+  const theme = useSyncExternalStore(subscribeTheme, readTheme, () => 'light' as Theme)
 
   const toggle = () => {
     const next: Theme = theme === 'dark' ? 'light' : 'dark'
@@ -24,7 +28,6 @@ export function ThemeToggle() {
     } catch {
       /* stockage indisponible : le choix vaut pour cette visite */
     }
-    setTheme(next)
     window.setTimeout(() => root.classList.remove('theme-switching'), 600)
   }
 
