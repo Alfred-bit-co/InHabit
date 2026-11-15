@@ -138,7 +138,10 @@ export const HomePage: GlobalConfig = {
               relationTo: 'media',
               hasMany: true,
               label: 'Bande d’images en bas du bandeau',
-              admin: { description: '3 à 5 images de projets, affichées côte à côte.' },
+              admin: {
+                description:
+                  '3 à 5 images affichées côte à côte sous le bandeau. Laissée vide, la bande montre les images principales des projets.',
+              },
             },
           ],
         },
@@ -146,7 +149,8 @@ export const HomePage: GlobalConfig = {
           label: 'Présentation',
           fields: [
             { name: 'introEyebrow', type: 'text', label: 'Surtitre', defaultValue: 'La chaîne InHabit_Archi' },
-            { name: 'introTitle', type: 'text', label: 'Titre' },
+            // Pas affiché sur le site : masqué pour ne pas laisser croire qu'il a un effet
+            { name: 'introTitle', type: 'text', label: 'Titre', admin: { hidden: true } },
             { name: 'introText', type: 'textarea', label: 'Texte' },
             {
               name: 'stats',

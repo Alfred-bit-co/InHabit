@@ -49,7 +49,25 @@ export default async function HomePage() {
       link: c.link,
     }))
 
-  const gallery = projects.docs.filter((p) => isMedia(p.cover)).slice(0, 5)
+  // Bande d'images sous le bandeau : images choisies dans l'admin (Page d'accueil → Bande d'images),
+  // sinon les images principales des projets.
+  type GalleryItem = { key: string; href: string; src: string; alt: string; title: string; place: string }
+  const projectItem = (p: (typeof projects.docs)[number]): GalleryItem => ({
+    key: `p${p.id}`,
+    href: `/projets/${p.slug}`,
+    src: mediaUrl(p.cover, 'large') ?? '',
+    alt: mediaAlt(p.cover, p.title),
+    title: p.title,
+    place: [p.city, countryName(p.country, p.countryOther)].filter(Boolean).join(', '),
+  })
+  const strip = (home.strip ?? []).filter(isMedia)
+  const gallery: GalleryItem[] = strip.length
+    ? strip.slice(0, 5).map((m) => {
+        const project = projects.docs.find((p) => isMedia(p.cover) && p.cover.id === m.id)
+        if (project) return projectItem(project)
+        return { key: `m${m.id}`, href: '/projets', src: mediaUrl(m, 'large') ?? '', alt: m.alt || '', title: m.alt || 'Projet', place: '' }
+      })
+    : projects.docs.filter((p) => isMedia(p.cover)).slice(0, 5).map(projectItem)
   const featured = projects.docs.filter((p) => p.featured).slice(0, 3)
   const bento = featured.length >= 3 ? featured : projects.docs.slice(0, 3)
 
@@ -115,13 +133,13 @@ export default async function HomePage() {
 
           {gallery.length > 0 && (
             <div className="expand-gallery fade-up d3">
-              {gallery.map((p) => (
-                <Link key={p.id} href={`/projets/${p.slug}`} data-cursor="Voir">
-                  <img src={mediaUrl(p.cover, 'large') ?? ''} alt={mediaAlt(p.cover, p.title)} loading="lazy" />
+              {gallery.map((g) => (
+                <Link key={g.key} href={g.href} data-cursor="Voir">
+                  <img src={g.src} alt={g.alt} loading="lazy" />
                   <span className="label">
                     <span>
-                      <strong>{p.title}</strong>
-                      <span>{[p.city, countryName(p.country, p.countryOther)].filter(Boolean).join(', ')}</span>
+                      <strong>{g.title}</strong>
+                      {g.place && <span>{g.place}</span>}
                     </span>
                     <i aria-hidden="true">→</i>
                   </span>

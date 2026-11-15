@@ -196,7 +196,10 @@ export interface News {
  */
 export interface Media {
   id: number;
-  alt: string;
+  /**
+   * Facultatif. Laissée vide, elle est remplie à partir du nom du fichier.
+   */
+  alt?: string | null;
   prefix?: string | null;
   _objectKey?: string | null;
   updatedAt: string;
@@ -1005,7 +1008,7 @@ export interface Home {
       }[]
     | null;
   /**
-   * 3 à 5 images de projets, affichées côte à côte.
+   * 3 à 5 images affichées côte à côte sous le bandeau. Laissée vide, la bande montre les images principales des projets.
    */
   strip?: (number | Media)[] | null;
   introEyebrow?: string | null;
