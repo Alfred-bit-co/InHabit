@@ -137,6 +137,17 @@ html[data-theme='light'] .nav__link.active {
   color: var(--ih-muted);
 }
 
+/* Champ image déjà rempli : rappel de la marche à suivre pour la changer
+   (le crayon modifie l'image actuelle, il ne la remplace pas). */
+.field-type.upload:has(.upload-relationship-details)::after {
+  content: 'Pour changer d’image : cliquez sur la croix ×, puis « Ajouter » (nouvelle image) ou « Choisir parmi les existant(e)s ». Enregistrez ensuite la page.';
+  display: block;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ih-muted);
+}
+
 /* Ordre du menu, du plus utilisé au moins utilisé.
    Fait en CSS pour ne pas changer l'ordre de la configuration (et donc payload-types.ts). */
 .nav-group {
