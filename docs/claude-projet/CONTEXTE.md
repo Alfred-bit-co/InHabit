@@ -83,6 +83,7 @@ Elles sont listées dans `inhabit-app/.env.example`. Les vraies valeurs ne doive
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Compte administrateur créé par `npm run seed`. |
 | `S3_PRIVATE_BUCKET` | Bucket Supabase **privé** du livre en PDF (`livres`). |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Paiement par carte. Vides : les boutons de paiement sont masqués. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Connexion « Continuer avec Google ». Vides : le bouton est masqué. |
 
 ## 3. Structure du contenu (Payload)
 
@@ -103,7 +104,7 @@ Elles sont listées dans `inhabit-app/.env.example`. Les vraies valeurs ne doive
 | `users` | Administrateurs (seuls à entrer dans /admin). |
 | `members` | Lecteurs inscrits sur le site (espace membre). Comptes séparés des administrateurs. |
 | `orders` | Commandes payées par carte, toujours rattachées à un compte membre. |
-| `book-files` | Le livre en PDF (complet ou extrait), stocké en privé. |
+| `book-files` | Le livre en PDF, stocké en privé, lisible seulement par les abonnés. |
 | `book-chapters` | Version texte facultative du livre, par chapitres. |
 
 **Règles d'accès** (`src/access/index.ts`) :
@@ -202,8 +203,9 @@ Autres règles :
 
 ## 7. Espace membre et paiement (ajoutés le 23/11/2026)
 
+- **Espace membre réservé aux abonnés :** un compte (email ou « Continuer avec Google ») sans paiement confirmé n'entre pas ; il est envoyé sur `/espace-membre/abonnement` pour payer. Pas d'extrait gratuit.
 - **Espace membre** `/espace-membre`, inspiré d'une liseuse : menu à gauche (Ma bibliothèque, Lire CONCEPT, Marque-pages, Mes achats, Profil, Déconnexion), lecture en double page avec une bande de miniatures en bas.
-- **Livre protégé :** l'admin téléverse le PDF (Mes contenus → Livre CONCEPT — PDF protégé). Les comptes qui ont payé lisent le livre complet, les autres l'extrait. Le livre n'est jamais téléchargeable : il arrive par morceaux brouillés, avec le nom du lecteur en filigrane, et l'impression comme Ctrl+S sont bloqués. Un enregistrement vidéo de l'écran ne peut pas être bloqué sur le web : le filigrane permet de retrouver qui l'a fait.
+- **Livre protégé :** l'admin téléverse le PDF (Mes contenus → Livre CONCEPT — PDF protégé). Seuls les abonnés le lisent. Le livre n'est jamais téléchargeable : il arrive par morceaux brouillés, avec le nom du lecteur en filigrane, et l'impression comme Ctrl+S sont bloqués. Un enregistrement vidéo de l'écran ne peut pas être bloqué sur le web : le filigrane permet de retrouver qui l'a fait.
 - **Paiement par carte :** Stripe Checkout, réglé par édition dans l'admin (prix, devise, accès à vie ou durée en jours pour un abonnement) et pour l'Accompagnement (lien de paiement dans l'email de confirmation). **Il faut être connecté pour acheter.** La confirmation arrive par le webhook `/paiement/webhook`.
 - **Sécurité :** les règles d'accès vérifient que le compte est un administrateur (`users`), pas seulement qu'il est connecté. Un membre n'a aucun droit d'administration.
 - La mise en place côté Supabase et Stripe est décrite dans **CONSIGNES-ESPACE-MEMBRE.md**.
