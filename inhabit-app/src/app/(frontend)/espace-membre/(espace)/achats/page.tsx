@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { IconBag } from '@/components/member/icons'
 import { formatShortDate } from '@/lib/dates'
-import { requireMember } from '@/lib/member'
+import { requireSubscriber } from '@/lib/member'
 import { getPayloadClient } from '@/lib/payload'
 import { formatMoney } from '@/lib/payments/money'
 
@@ -17,7 +17,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 const pendingSince = () => new Date(Date.now() - 86_400_000).toISOString()
 
 export default async function PurchasesPage() {
-  const member = await requireMember('/espace-membre/achats')
+  const member = await requireSubscriber('/espace-membre/achats')
   const payload = await getPayloadClient()
   // Uniquement les commandes passées avec ce compte
   const { docs: orders } = await payload.find({

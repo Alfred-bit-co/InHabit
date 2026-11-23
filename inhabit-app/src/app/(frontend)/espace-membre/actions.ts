@@ -5,7 +5,7 @@ import { login, logout } from '@payloadcms/next/auth'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import type { FormState } from '@/app/(frontend)/actions'
-import { getMember, safeNext } from '@/lib/member'
+import { getMember, getSubscriber, safeNext } from '@/lib/member'
 import { getPayloadClient } from '@/lib/payload'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
@@ -131,9 +131,9 @@ export async function changePassword(_: FormState, fd: FormData): Promise<FormSt
 
 const clamp01 = (n: number) => (Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : 0)
 
-/** Le membre peut-il lire ce chapitre ? (mêmes règles que la collection) */
+/** Le membre (abonné) peut-il lire ce chapitre ? (mêmes règles que la collection) */
 async function readableChapter(chapterId: number) {
-  const member = await getMember()
+  const member = await getSubscriber()
   if (!member || !Number.isInteger(chapterId)) return null
   const payload = await getPayloadClient()
   const chapter = await payload.findByID({
@@ -179,7 +179,7 @@ export async function addBookmark(chapterId: number, position: number, excerpt: 
 
 export async function removeBookmark(fd: FormData) {
   const bookmarkId = String(fd.get('id') ?? '')
-  const member = await getMember()
+  const member = await getSubscriber()
   if (!member || !bookmarkId) return
   const payload = await getPayloadClient()
   const bookmarks = bookmarkData(member.bookmarks).filter((b) => b.id !== bookmarkId)
@@ -202,7 +202,7 @@ const bookmarkData = (list: NonNullable<Awaited<ReturnType<typeof getMember>>>['
   }))
 
 export async function savePdfPage(page: number) {
-  const member = await getMember()
+  const member = await getSubscriber()
   const p = toPage(page)
   if (!member || !p) return
   const payload = await getPayloadClient()
@@ -210,7 +210,7 @@ export async function savePdfPage(page: number) {
 }
 
 export async function addPdfBookmark(page: number) {
-  const member = await getMember()
+  const member = await getSubscriber()
   const p = toPage(page)
   if (!member || !p) return { ok: false }
   const bookmarks = bookmarkData(member.bookmarks)

@@ -20,11 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function BookPage({ searchParams }: { searchParams: Promise<{ paiement?: string }> }) {
   const { paiement } = await searchParams
   const payload = await getPayloadClient()
-  const [book, freeChapters, member] = await Promise.all([
-    payload.findGlobal({ slug: 'book', depth: 1 }),
-    payload.count({ collection: 'book-chapters', where: { and: [{ published: { equals: true } }, { free: { equals: true } }] } }),
-    getMember(),
-  ])
+  const [book, member] = await Promise.all([payload.findGlobal({ slug: 'book', depth: 1 }), getMember()])
   const editions = book.editions ?? []
   const cardPayments = paymentsEnabled()
   const excerpts = (book.excerpts ?? []).filter((e) => isMedia(e.image))
@@ -53,11 +49,6 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
               <a href="#editions" className="btn btn-accent">
                 Commander le livre
               </a>
-              {freeChapters.totalDocs > 0 && (
-                <Link href="/espace-membre/lecture" className="btn btn-beige">
-                  Lire un extrait en ligne
-                </Link>
-              )}
             </div>
           </div>
         </div>
@@ -114,9 +105,9 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
           <PayNotice status={paiement} />
           {cardPayments && !member && editions.some((ed) => ed.payByCard) && (
             <p className="form-note" style={{ margin: '0 0 20px' }}>
-              Le paiement par carte se fait depuis votre espace membre :{' '}
+              Pour payer par carte,{' '}
               <Link href="/espace-membre/connexion?suite=%2Fproduits%2Flivre-concept%23editions">connectez-vous</Link> ou créez
-              un compte gratuit en une minute. Vos achats et votre lecture y restent rattachés.
+              votre compte (email ou Google). L’espace membre et la lecture s’ouvrent dès le paiement confirmé.
             </p>
           )}
           {editions.length ? (
@@ -135,7 +126,11 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
                   {(ed.price || (ed.payByCard && ed.priceAmount)) && (
                     <span className="price">{ed.price || formatMoney(ed.priceAmount, ed.currency)}</span>
                   )}
-                  {ed.digitalAccess && <span className="muted edition-note">Lecture en ligne incluse</span>}
+                  {ed.digitalAccess && (
+                    <span className="muted edition-note">
+                      {ed.accessDays ? `Espace membre : ${ed.accessDays} jours de lecture en ligne` : 'Espace membre : lecture en ligne à vie'}
+                    </span>
+                  )}
                   <div className="links">
                     {ed.available === false ? (
                       <span className="tag tag-neutral">Bientôt disponible</span>

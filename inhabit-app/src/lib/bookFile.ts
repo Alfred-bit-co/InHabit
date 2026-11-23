@@ -9,26 +9,22 @@ import { privateBucket, s3ClientConfig, s3Enabled } from './s3'
 
 /* ───────────── Quel fichier pour ce membre ? ───────────── */
 
-/** Livre complet si le membre a payé (et que l'accès est valide), sinon l'extrait. */
+/** Le livre PDF en ligne le plus récent, seulement pour un membre abonné (accès payé et en cours). */
 export async function getReadableBookFile(member: Member): Promise<BookFile | null> {
+  if (!hasBookAccess(member)) return null
   const payload = await getPayloadClient()
-  const pick = async (kind: 'complet' | 'extrait') =>
-    (
-      await payload.find({
-        collection: 'book-files',
-        where: { and: [{ kind: { equals: kind } }, { active: { equals: true } }] },
-        sort: '-createdAt',
-        limit: 1,
-        depth: 0,
-      })
-    ).docs[0] ?? null
-  if (hasBookAccess(member)) return (await pick('complet')) ?? (await pick('extrait'))
-  return pick('extrait')
+  const { docs } = await payload.find({
+    collection: 'book-files',
+    where: { and: [{ kind: { equals: 'complet' } }, { active: { equals: true } }] },
+    sort: '-createdAt',
+    limit: 1,
+    depth: 0,
+  })
+  return docs[0] ?? null
 }
 
 export function canReadFile(member: Member, file: Pick<BookFile, 'kind' | 'active'>) {
-  if (!file.active) return false
-  return file.kind === 'extrait' || hasBookAccess(member)
+  return Boolean(file.active) && file.kind === 'complet' && hasBookAccess(member)
 }
 
 /* ───────────── Jeton de lecture ───────────── */

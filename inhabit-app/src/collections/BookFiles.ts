@@ -17,13 +17,13 @@ export const BookFiles: CollectionConfig = {
   admin: {
     group: 'Mes contenus',
     useAsTitle: 'title',
-    defaultColumns: ['title', 'kind', 'active', 'updatedAt'],
+    defaultColumns: ['title', 'active', 'updatedAt'],
     hideAPIURL: true,
     components: {
       Description: {
         path: '/components/admin/Description#Description',
         clientProps: {
-          text: 'Téléversez ici le livre en PDF. « Livre complet » n’est lisible que par les lecteurs ayant payé ; « Extrait » par tous les inscrits. Le fichier n’est jamais téléchargeable : il s’affiche seulement dans l’espace membre, avec le nom du lecteur en filigrane.',
+          text: 'Téléversez ici le livre en PDF. Il n’est lisible que par les membres abonnés (paiement confirmé), jamais téléchargeable : il s’affiche seulement dans la liseuse de l’espace membre, avec le nom du lecteur en filigrane.',
         },
       },
     },
@@ -47,16 +47,18 @@ export const BookFiles: CollectionConfig = {
           required: true,
           defaultValue: 'complet',
           options: [
-            { label: 'Livre complet (lecteurs ayant payé)', value: 'complet' },
-            { label: 'Extrait (tous les inscrits)', value: 'extrait' },
+            { label: 'Livre complet', value: 'complet' },
+            { label: 'Extrait', value: 'extrait' },
           ],
+          // Seul le livre complet est lu (réservé aux abonnés) ; colonne gardée en base
+          admin: { hidden: true },
         },
         {
           name: 'active',
           type: 'checkbox',
           label: 'En ligne',
           defaultValue: true,
-          admin: { description: 'Si plusieurs fichiers du même type sont en ligne, le plus récent est utilisé.' },
+          admin: { description: 'Si plusieurs fichiers sont en ligne, le plus récent est utilisé.' },
         },
       ],
     },

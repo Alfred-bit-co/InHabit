@@ -17,7 +17,7 @@ export const Members: CollectionConfig = {
       Description: {
         path: '/components/admin/Description#Description',
         clientProps: {
-          text: 'Les lecteurs inscrits sur le site. L’accès au livre s’ouvre tout seul après paiement ; vous pouvez aussi le donner à la main (cadeau, presse…).',
+          text: 'Les lecteurs inscrits sur le site (email ou Google). L’espace membre ne s’ouvre qu’avec un accès actif : automatiquement après paiement, ou à la main ici (cadeau, presse…).',
         },
       },
     },
@@ -49,6 +49,16 @@ export const Members: CollectionConfig = {
   },
   fields: [
     { name: 'name', type: 'text', label: 'Nom' },
+    {
+      // Identifiant du compte Google lié (connexion « Continuer avec Google »)
+      name: 'googleId',
+      type: 'text',
+      label: 'Compte Google lié',
+      unique: true,
+      index: true,
+      access: { create: adminFieldOnly, update: adminFieldOnly },
+      admin: { position: 'sidebar', readOnly: true, description: 'Rempli automatiquement si le membre se connecte avec Google.' },
+    },
     {
       name: 'bookAccess',
       type: 'checkbox',

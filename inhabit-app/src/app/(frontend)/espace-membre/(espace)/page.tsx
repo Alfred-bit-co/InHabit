@@ -2,14 +2,13 @@
 import Link from 'next/link'
 import { IconBookmark, IconChevron, IconLock } from '@/components/member/icons'
 import { getChapterList, relId } from '@/lib/book'
-import { hasBookAccess } from '@/lib/bookAccess'
 import { getReadableBookFile } from '@/lib/bookFile'
 import { formatShortDate } from '@/lib/dates'
-import { requireMember } from '@/lib/member'
+import { requireSubscriber } from '@/lib/member'
 import { getPayloadClient, isMedia, mediaAlt, mediaUrl } from '@/lib/payload'
 
 export default async function LibraryPage() {
-  const member = await requireMember()
+  const member = await requireSubscriber()
   const payload = await getPayloadClient()
   const [book, chapters, pdf] = await Promise.all([
     payload.findGlobal({ slug: 'book', depth: 1 }),
@@ -17,8 +16,6 @@ export default async function LibraryPage() {
     getReadableBookFile(member),
   ])
 
-  const full = hasBookAccess(member)
-  const expired = Boolean(member.bookAccess && !full)
   const title = book.title || 'CONCEPT'
 
   // Version texte (chapitres)
@@ -31,25 +28,15 @@ export default async function LibraryPage() {
 
   const chapterById = new Map(chapters.map((c) => [c.id, c]))
   const recentMarks = [...(member.bookmarks ?? [])].reverse().slice(0, 3)
-  const pdfIsExtract = pdf?.kind === 'extrait'
 
   return (
     <div className="member-page">
       <header className="member-head">
         <div>
           <span className="eyebrow">Ma bibliothèque</span>
-          <h1>{full ? 'Votre lecture vous attend.' : 'Bienvenue dans votre espace.'}</h1>
+          <h1>Votre lecture vous attend.</h1>
         </div>
       </header>
-
-      {expired && (
-        <p className="form-status ko" role="status" style={{ margin: 0 }}>
-          Votre accès au livre a pris fin le {formatShortDate(member.bookAccessUntil)}.{' '}
-          <Link href="/produits/livre-concept#editions" style={{ textDecoration: 'underline' }}>
-            Le renouveler
-          </Link>
-        </p>
-      )}
 
       <div className="library-hero">
         <div className="library-cover">
@@ -60,10 +47,10 @@ export default async function LibraryPage() {
           )}
         </div>
         <div className="library-info">
-          <span className={`tag ${full ? '' : 'tag-neutral'}`}>{full ? 'Édition numérique' : 'Extraits offerts'}</span>
+          <span className="tag">Édition numérique</span>
           <h2>{title}</h2>
           {book.subtitle && <p className="muted">{book.subtitle}</p>}
-          {full && member.bookAccessUntil && (
+          {member.bookAccessUntil && (
             <p className="muted progress-label">Accès jusqu’au {formatShortDate(member.bookAccessUntil)}</p>
           )}
 
@@ -72,23 +59,17 @@ export default async function LibraryPage() {
               <p className="library-current">
                 {member.pdfPage ? (
                   <>
-                    Vous en êtes à la <strong>page {member.pdfPage}</strong>
-                    {pdfIsExtract ? ' de l’extrait' : ''}.
+                    Vous en êtes à la <strong>page {member.pdfPage}</strong>.
                   </>
                 ) : (
-                  <>{pdfIsExtract ? 'Découvrez les premières pages du livre.' : 'Votre exemplaire numérique est prêt.'}</>
+                  <>Votre exemplaire numérique est prêt.</>
                 )}
               </p>
               <div className="library-actions">
                 <Link href="/espace-membre/livre" className="btn btn-accent">
-                  {member.pdfPage ? 'Reprendre la lecture' : pdfIsExtract ? 'Lire l’extrait' : 'Commencer la lecture'}{' '}
+                  {member.pdfPage ? 'Reprendre la lecture' : 'Commencer la lecture'}{' '}
                   <span className="arrow">→</span>
                 </Link>
-                {!full && (
-                  <Link href="/produits/livre-concept#editions" className="btn btn-beige">
-                    Acheter le livre complet
-                  </Link>
-                )}
               </div>
             </>
           ) : current ? (
@@ -104,21 +85,11 @@ export default async function LibraryPage() {
                 <Link href={`/espace-membre/lecture/${current.id}`} className="btn btn-accent">
                   {currentId ? 'Reprendre la lecture' : 'Commencer la lecture'} <span className="arrow">→</span>
                 </Link>
-                {!full && (
-                  <Link href="/produits/livre-concept#editions" className="btn btn-beige">
-                    Acheter le livre complet
-                  </Link>
-                )}
               </div>
             </>
           ) : (
             <>
               <p className="muted">Le livre sera bientôt disponible en lecture en ligne.</p>
-              {!full && (
-                <Link href="/produits/livre-concept#editions" className="btn btn-beige">
-                  Découvrir le livre
-                </Link>
-              )}
             </>
           )}
         </div>
@@ -138,7 +109,6 @@ export default async function LibraryPage() {
                       <Link href={`/espace-membre/lecture/${c.id}`} aria-current={c.id === currentId ? 'step' : undefined}>
                         <span className="toc-num">{String(c.number).padStart(2, '0')}</span>
                         <span className="toc-title">{c.title}</span>
-                        {c.free && !full && <span className="tag">Offert</span>}
                         <IconChevron size={16} />
                       </Link>
                     ) : (

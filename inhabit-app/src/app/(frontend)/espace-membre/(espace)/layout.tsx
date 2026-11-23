@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SideNav } from '@/components/member/SideNav'
-import { firstName, requireMember } from '@/lib/member'
+import { firstName, requireSubscriber } from '@/lib/member'
 
 export const metadata: Metadata = { title: 'Espace membre', robots: { index: false } }
 
@@ -14,7 +14,7 @@ const initials = (name: string) =>
     .join('')
 
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
-  const member = await requireMember()
+  const member = await requireSubscriber()
   const name = member.name || firstName(member)
 
   return (
