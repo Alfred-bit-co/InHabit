@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { isAdmin } from '../access'
 
 /** « mon-projet_facade-01.jpg » → « Mon projet facade 01 » */
 export const altFromFilename = (filename?: string | null) => {
@@ -19,6 +20,9 @@ export const Media: CollectionConfig = {
   },
   access: {
     read: () => true,
+    create: isAdmin,
+    update: isAdmin,
+    delete: isAdmin,
   },
   fields: [
     {

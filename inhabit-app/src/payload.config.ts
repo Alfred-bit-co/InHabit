@@ -9,7 +9,11 @@ import { buildConfig } from 'payload'
 import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
+import { BookChapters } from './collections/BookChapters'
+import { BookFiles } from './collections/BookFiles'
 import { Events } from './collections/Events'
+import { Members } from './collections/Members'
+import { Orders } from './collections/Orders'
 import { migrations } from './migrations'
 import { Media } from './collections/Media'
 import { News } from './collections/News'
@@ -18,6 +22,7 @@ import { Publications } from './collections/Publications'
 import { Appointments, CoachingBookings, ContactMessages, TopicSuggestions } from './collections/Requests'
 import { Users } from './collections/Users'
 import { Videos, VideoThemes } from './collections/Videos'
+import { privateBucket, s3ClientConfig, s3Enabled } from './lib/s3'
 import { AboutPage, AppointmentSettings, Book, Coaching, HomePage, SiteSettings, YoutubePage } from './globals'
 
 const filename = fileURLToPath(import.meta.url)
@@ -50,9 +55,6 @@ const db = databaseUrl.startsWith('postgres')
  * sont définies ; sinon les fichiers restent sur le disque (dossier media/), comme en local.
  * Le bucket est public : les images sont servies directement par Supabase.
  */
-const s3Enabled = Boolean(
-  process.env.S3_BUCKET && process.env.S3_ENDPOINT && process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY,
-)
 const s3PublicUrl = (process.env.S3_PUBLIC_URL || '').replace(/\/$/, '')
 
 const storage = s3Storage({
@@ -69,15 +71,23 @@ const storage = s3Storage({
         }
       : true,
   },
-  config: {
-    endpoint: process.env.S3_ENDPOINT,
-    region: process.env.S3_REGION || 'eu-west-3',
-    forcePathStyle: true,
-    credentials: {
-      accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
-      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
-    },
-  },
+  config: s3ClientConfig,
+})
+
+/**
+ * Livre en PDF : bucket Supabase PRIVÉ, distinct du bucket public des images.
+ * - Pas d'URL publique : Payload ne sert le fichier qu'à un administrateur.
+ * - clientUploads : le PDF part directement du navigateur vers Supabase
+ *   (sinon Vercel refuse les fichiers de plus de 4,5 Mo). Le bucket doit autoriser
+ *   les requêtes PUT depuis l'adresse du site (CORS) : voir docs/claude-projet.
+ */
+const privateStorage = s3Storage({
+  enabled: s3Enabled,
+  alwaysInsertFields: true,
+  bucket: privateBucket,
+  clientUploads: true,
+  collections: { 'book-files': true },
+  config: s3ClientConfig,
 })
 
 /** Envoi d'emails si un serveur SMTP est configuré ; sinon les emails sont affichés dans la console. */
@@ -94,8 +104,24 @@ const email = process.env.SMTP_HOST
     })
   : undefined
 
+/**
+ * Adresses depuis lesquelles une session (cookie) est acceptée pour les envois de formulaires.
+ * Payload ajoute déjà NEXT_PUBLIC_SERVER_URL ; on ajoute les adresses Vercel (préversions,
+ * domaine de production) et d'éventuelles adresses supplémentaires (www…), séparées par des virgules.
+ * Sans cela, un membre connecté sur une autre adresse ne pourrait pas enregistrer sa lecture.
+ */
+const allowedOrigins = [
+  process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`,
+  process.env.VERCEL_BRANCH_URL && `https://${process.env.VERCEL_BRANCH_URL}`,
+  process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
+  ...(process.env.EXTRA_ALLOWED_ORIGINS || '').split(','),
+]
+  .map((o) => (o || '').trim().replace(/\/$/, ''))
+  .filter(Boolean)
+
 export default buildConfig({
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || '',
+  csrf: allowedOrigins,
   admin: {
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
@@ -133,6 +159,8 @@ export default buildConfig({
     News,
     Projects,
     Publications,
+    BookChapters,
+    BookFiles,
     Events,
     Media,
     Videos,
@@ -141,6 +169,8 @@ export default buildConfig({
     Appointments,
     ContactMessages,
     TopicSuggestions,
+    Orders,
+    Members,
     Users,
   ],
   globals: [HomePage, YoutubePage, AboutPage, Book, Coaching, AppointmentSettings, SiteSettings],
@@ -150,5 +180,5 @@ export default buildConfig({
   db,
   email,
   sharp,
-  plugins: [storage],
+  plugins: [storage, privateStorage],
 })

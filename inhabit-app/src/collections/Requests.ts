@@ -4,6 +4,9 @@ import { notifyOnCreate, safeSend } from '../hooks/notify'
 import { emailTable, escapeHtml } from '../lib/escape'
 import { formatDateFr, formatMonthFr } from '../lib/dates'
 import { CONTACT_REASONS } from '../lib/constants'
+import { formatMoney } from '../lib/payments/money'
+import { paymentsEnabled } from '../lib/payments/provider'
+import { coachingPayUrl } from '../lib/payments/tokens'
 
 const GROUP = 'Demandes'
 
@@ -32,10 +35,19 @@ const coachingStatusMail: CollectionAfterChangeHook = async ({ doc, previousDoc,
   if (operation !== 'update' || doc.status === previousDoc?.status) return doc
   const month = formatMonthFr(doc.month)
   if (doc.status === 'confirmee') {
+    // Lien de paiement par carte si activé dans « Accompagnement CONCEPT » et pas encore réglé
+    let payLine = ''
+    if (paymentsEnabled() && doc.paymentStatus !== 'payee') {
+      const coaching = await req.payload.findGlobal({ slug: 'coaching', depth: 0, req })
+      if (coaching.payByCard && coaching.priceAmount) {
+        const url = coachingPayUrl(doc.id)
+        payLine = `<p style="font-family:Arial,sans-serif">Pour réserver définitivement votre place, vous pouvez régler <strong>${escapeHtml(formatMoney(coaching.priceAmount, coaching.currency))}</strong> par carte bancaire, en toute sécurité : <a href="${url}">payer en ligne</a>.</p>`
+      }
+    }
     await safeSend(req, {
       to: doc.email,
       subject: 'Votre place pour l’Accompagnement CONCEPT est confirmée',
-      html: `<p style="font-family:Arial,sans-serif">Bonjour ${escapeHtml(doc.name)},</p><p style="font-family:Arial,sans-serif">Votre participation à l’Accompagnement CONCEPT pour <strong>${escapeHtml(month)}</strong> est confirmée. Vous recevrez prochainement les informations pratiques.</p>${signature}`,
+      html: `<p style="font-family:Arial,sans-serif">Bonjour ${escapeHtml(doc.name)},</p><p style="font-family:Arial,sans-serif">Votre participation à l’Accompagnement CONCEPT pour <strong>${escapeHtml(month)}</strong> est confirmée. Vous recevrez prochainement les informations pratiques.</p>${payLine}${signature}`,
     })
   }
   if (doc.status === 'annulee') {
@@ -95,6 +107,18 @@ export const CoachingBookings: CollectionConfig = {
       ],
     },
     { name: 'motivation', type: 'textarea', label: 'Objectifs et motivation' },
+    {
+      name: 'paymentStatus',
+      type: 'select',
+      label: 'Paiement',
+      defaultValue: 'non-paye',
+      options: [
+        { label: 'Non réglé', value: 'non-paye' },
+        { label: 'Réglé par carte', value: 'payee' },
+        { label: 'Réglé autrement (virement, espèces…)', value: 'autre' },
+      ],
+      admin: { position: 'sidebar' },
+    },
     statusField(
       [
         { label: 'Nouvelle (à traiter)', value: 'nouvelle' },

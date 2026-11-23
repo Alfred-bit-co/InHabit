@@ -1,9 +1,15 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { PayButton } from '@/components/payments/PayButton'
+import { PayNotice } from '@/components/payments/PayNotice'
 import { ProductsNav } from '@/components/ProductsNav'
 import { RichText } from '@/components/RichText'
+import { getMember } from '@/lib/member'
 import { getPayloadClient, isMedia, mediaAlt, mediaUrl } from '@/lib/payload'
+import { formatMoney } from '@/lib/payments/money'
+import { paymentsEnabled } from '@/lib/payments/provider'
+import { payBookEdition } from '../../paiement/actions'
 
 export async function generateMetadata(): Promise<Metadata> {
   const payload = await getPayloadClient()
@@ -11,10 +17,16 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `Livre ${book.title || 'CONCEPT'}`, description: book.pitch || undefined }
 }
 
-export default async function BookPage() {
+export default async function BookPage({ searchParams }: { searchParams: Promise<{ paiement?: string }> }) {
+  const { paiement } = await searchParams
   const payload = await getPayloadClient()
-  const book = await payload.findGlobal({ slug: 'book', depth: 1 })
+  const [book, freeChapters, member] = await Promise.all([
+    payload.findGlobal({ slug: 'book', depth: 1 }),
+    payload.count({ collection: 'book-chapters', where: { and: [{ published: { equals: true } }, { free: { equals: true } }] } }),
+    getMember(),
+  ])
   const editions = book.editions ?? []
+  const cardPayments = paymentsEnabled()
   const excerpts = (book.excerpts ?? []).filter((e) => isMedia(e.image))
 
   return (
@@ -37,9 +49,16 @@ export default async function BookPage() {
             <h1 style={{ fontSize: 'clamp(3rem, 7vw, 5.6rem)' }}>{book.title || 'CONCEPT'}</h1>
             {book.subtitle && <p className="lead" style={{ color: 'var(--beige)' }}>{book.subtitle}</p>}
             {book.pitch && <p className="lead">{book.pitch}</p>}
-            <a href="#editions" className="btn btn-accent" style={{ marginTop: 16 }}>
-              Commander le livre
-            </a>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 16 }}>
+              <a href="#editions" className="btn btn-accent">
+                Commander le livre
+              </a>
+              {freeChapters.totalDocs > 0 && (
+                <Link href="/espace-membre/lecture" className="btn btn-beige">
+                  Lire un extrait en ligne
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </section>
@@ -92,6 +111,14 @@ export default async function BookPage() {
               <h2>Formats et prix.</h2>
             </div>
           </div>
+          <PayNotice status={paiement} />
+          {cardPayments && !member && editions.some((ed) => ed.payByCard) && (
+            <p className="form-note" style={{ margin: '0 0 20px' }}>
+              Le paiement par carte se fait depuis votre espace membre :{' '}
+              <Link href="/espace-membre/connexion?suite=%2Fproduits%2Flivre-concept%23editions">connectez-vous</Link> ou créez
+              un compte gratuit en une minute. Vos achats et votre lecture y restent rattachés.
+            </p>
+          )}
           {editions.length ? (
             <div className="grid grid-3">
               {editions.map((ed) => (
@@ -105,16 +132,29 @@ export default async function BookPage() {
                   )}
                   <h3 style={{ margin: 0 }}>{ed.name}</h3>
                   {ed.format && <span className="muted">{ed.format}</span>}
-                  {ed.price && <span className="price">{ed.price}</span>}
+                  {(ed.price || (ed.payByCard && ed.priceAmount)) && (
+                    <span className="price">{ed.price || formatMoney(ed.priceAmount, ed.currency)}</span>
+                  )}
+                  {ed.digitalAccess && <span className="muted edition-note">Lecture en ligne incluse</span>}
                   <div className="links">
                     {ed.available === false ? (
                       <span className="tag tag-neutral">Bientôt disponible</span>
                     ) : (
-                      (ed.links ?? []).map((l) => (
-                        <a key={l.id} href={l.url} className="btn btn-beige btn-sm" target="_blank" rel="noopener noreferrer">
-                          {l.label}
-                        </a>
-                      ))
+                      <>
+                        {cardPayments && ed.payByCard && !!ed.priceAmount && ed.id && (
+                          <form action={payBookEdition}>
+                            <input type="hidden" name="edition" value={ed.id} />
+                            <PayButton>
+                              <CardIcon /> Payer par carte
+                            </PayButton>
+                          </form>
+                        )}
+                        {(ed.links ?? []).map((l) => (
+                          <a key={l.id} href={l.url} className="btn btn-beige btn-sm" target="_blank" rel="noopener noreferrer">
+                            {l.label}
+                          </a>
+                        ))}
+                      </>
                     )}
                   </div>
                 </div>
@@ -132,5 +172,14 @@ export default async function BookPage() {
         </div>
       </section>
     </>
+  )
+}
+
+function CardIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+      <path d="M2.5 10h19M6.5 15h4" />
+    </svg>
   )
 }

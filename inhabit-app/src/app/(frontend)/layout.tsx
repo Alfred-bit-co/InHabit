@@ -7,6 +7,7 @@ import { Motion } from '@/components/motion/Motion'
 import { themeScript } from '@/components/ThemeToggle'
 import { getSettings } from '@/lib/payload'
 import './styles.css'
+import './member.css'
 
 // Contenu toujours à jour : chaque modification dans l'admin est visible immédiatement.
 export const dynamic = 'force-dynamic'

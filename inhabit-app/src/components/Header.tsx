@@ -80,6 +80,18 @@ export function Header() {
               </div>
             </nav>
             <div className="header-cta">
+              <Link
+                href="/espace-membre"
+                className="header-account"
+                aria-label="Espace membre"
+                title="Espace membre"
+                aria-current={pathname.startsWith('/espace-membre') ? 'page' : undefined}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4.5 20.5c1.2-3.8 4-5.5 7.5-5.5s6.3 1.7 7.5 5.5" />
+                </svg>
+              </Link>
               <ThemeToggle />
               <Link href="/a-propos#contact" className="btn btn-beige btn-sm">
                 Contacts

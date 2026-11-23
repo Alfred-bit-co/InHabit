@@ -1,5 +1,6 @@
 import type { GlobalConfig } from 'payload'
 import { anyone, isLoggedIn } from '../access'
+import { CURRENCIES } from '../lib/payments/money'
 
 const access = { read: anyone, update: isLoggedIn }
 
@@ -288,6 +289,57 @@ export const Book: GlobalConfig = {
           ],
         },
         { name: 'available', type: 'checkbox', label: 'Disponible', defaultValue: true },
+        {
+          type: 'collapsible',
+          label: 'Paiement par carte sur le site',
+          admin: { initCollapsed: true },
+          fields: [
+            {
+              name: 'payByCard',
+              type: 'checkbox',
+              label: 'Proposer le paiement par carte bancaire',
+              defaultValue: false,
+              admin: {
+                description:
+                  'Affiche un bouton « Payer par carte ». Fonctionne une fois les clés du prestataire de paiement ajoutées à la mise en ligne.',
+              },
+            },
+            {
+              type: 'row',
+              fields: [
+                { name: 'priceAmount', type: 'number', label: 'Prix encaissé (nombre seul, ex. 29)', min: 0 },
+                { name: 'currency', type: 'select', label: 'Devise', defaultValue: 'eur', options: [...CURRENCIES] },
+              ],
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'digitalAccess',
+                  type: 'checkbox',
+                  label: 'Ouvre la lecture en ligne (espace membre)',
+                  defaultValue: false,
+                },
+                {
+                  name: 'accessDays',
+                  type: 'number',
+                  label: 'Durée de l’accès en jours (vide = à vie)',
+                  min: 1,
+                  admin: {
+                    description: 'Pour un abonnement : ex. 30 ou 365. Un nouvel achat prolonge l’accès en cours.',
+                    condition: (_, sibling) => Boolean(sibling?.digitalAccess),
+                  },
+                },
+                {
+                  name: 'requiresShipping',
+                  type: 'checkbox',
+                  label: 'Livre papier : demander l’adresse de livraison',
+                  defaultValue: false,
+                },
+              ],
+            },
+          ],
+        },
       ],
     },
     {
@@ -325,6 +377,30 @@ export const Coaching: GlobalConfig = {
       fields: [
         { name: 'price', type: 'text', label: 'Tarif affiché (ex. 250 €)' },
         { name: 'durationWeeks', type: 'number', label: 'Durée (semaines)', defaultValue: 4 },
+      ],
+    },
+    {
+      type: 'collapsible',
+      label: 'Paiement par carte',
+      admin: { initCollapsed: true },
+      fields: [
+        {
+          name: 'payByCard',
+          type: 'checkbox',
+          label: 'Envoyer un lien de paiement par carte à la confirmation',
+          defaultValue: false,
+          admin: {
+            description:
+              'Quand vous passez une réservation en « Confirmée », l’email au participant contient un lien pour régler en ligne.',
+          },
+        },
+        {
+          type: 'row',
+          fields: [
+            { name: 'priceAmount', type: 'number', label: 'Montant encaissé (nombre seul, ex. 250)', min: 0 },
+            { name: 'currency', type: 'select', label: 'Devise', defaultValue: 'eur', options: [...CURRENCIES] },
+          ],
+        },
       ],
     },
     { name: 'description', type: 'richText', label: 'Fonctionnement' },

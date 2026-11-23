@@ -63,6 +63,7 @@ export type SupportedTimezones =
 
 export interface Config {
   auth: {
+    members: MemberAuthOperations;
     users: UserAuthOperations;
   };
   blocks: {};
@@ -70,6 +71,8 @@ export interface Config {
     news: News;
     projects: Project;
     publications: Publication;
+    'book-chapters': BookChapter;
+    'book-files': BookFile;
     events: Event;
     media: Media;
     videos: Video;
@@ -78,6 +81,8 @@ export interface Config {
     appointments: Appointment;
     'contact-messages': ContactMessage;
     'topic-suggestions': TopicSuggestion;
+    orders: Order;
+    members: Member;
     users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -89,6 +94,8 @@ export interface Config {
     news: NewsSelect<false> | NewsSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
     publications: PublicationsSelect<false> | PublicationsSelect<true>;
+    'book-chapters': BookChaptersSelect<false> | BookChaptersSelect<true>;
+    'book-files': BookFilesSelect<false> | BookFilesSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     videos: VideosSelect<false> | VideosSelect<true>;
@@ -97,6 +104,8 @@ export interface Config {
     appointments: AppointmentsSelect<false> | AppointmentsSelect<true>;
     'contact-messages': ContactMessagesSelect<false> | ContactMessagesSelect<true>;
     'topic-suggestions': TopicSuggestionsSelect<false> | TopicSuggestionsSelect<true>;
+    orders: OrdersSelect<false> | OrdersSelect<true>;
+    members: MembersSelect<false> | MembersSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -129,10 +138,28 @@ export interface Config {
   widgets: {
     collections: CollectionsWidget;
   };
-  user: User;
+  user: Member | User;
   jobs: {
     tasks: unknown;
     workflows: unknown;
+  };
+}
+export interface MemberAuthOperations {
+  forgotPassword: {
+    email: string;
+    password: string;
+  };
+  login: {
+    email: string;
+    password: string;
+  };
+  registerFirstUser: {
+    email: string;
+    password: string;
+  };
+  unlock: {
+    email: string;
+    password: string;
   };
 }
 export interface UserAuthOperations {
@@ -390,6 +417,61 @@ export interface Publication {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "book-chapters".
+ */
+export interface BookChapter {
+  id: number;
+  number: number;
+  title: string;
+  part?: string | null;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  free?: boolean | null;
+  published?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "book-files".
+ */
+export interface BookFile {
+  id: number;
+  title: string;
+  kind: 'complet' | 'extrait';
+  /**
+   * Si plusieurs fichiers du même type sont en ligne, le plus récent est utilisé.
+   */
+  active?: boolean | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "events".
  */
 export interface Event {
@@ -489,6 +571,7 @@ export interface CoachingBooking {
   country?: string | null;
   profile?: ('etudiant' | 'jeune-diplome' | 'professionnel' | 'autre') | null;
   motivation?: string | null;
+  paymentStatus?: ('non-paye' | 'payee' | 'autre') | null;
   status: 'nouvelle' | 'confirmee' | 'annulee';
   note?: string | null;
   updatedAt: string;
@@ -547,6 +630,79 @@ export interface TopicSuggestion {
   note?: string | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  reference: string;
+  status: 'en-attente' | 'payee' | 'echouee' | 'expiree' | 'remboursee';
+  product: 'livre' | 'accompagnement';
+  label: string;
+  amount: number;
+  currency: 'eur' | 'xof' | 'usd' | 'jpy';
+  email?: string | null;
+  customerName?: string | null;
+  shippingAddress?: string | null;
+  grantsBookAccess?: boolean | null;
+  accessDays?: number | null;
+  editionId?: string | null;
+  member?: (number | null) | Member;
+  coachingBooking?: (number | null) | CoachingBooking;
+  provider?: string | null;
+  providerSessionId?: string | null;
+  providerPaymentId?: string | null;
+  paidAt?: string | null;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "members".
+ */
+export interface Member {
+  id: number;
+  name?: string | null;
+  bookAccess?: boolean | null;
+  /**
+   * Vide = accès à vie. Rempli automatiquement pour un abonnement à durée limitée.
+   */
+  bookAccessUntil?: string | null;
+  readingChapter?: (number | null) | BookChapter;
+  readingPosition?: number | null;
+  pdfPage?: number | null;
+  bookmarks?:
+    | {
+        chapter?: (number | null) | BookChapter;
+        position?: number | null;
+        page?: number | null;
+        excerpt?: string | null;
+        createdAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'members';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -612,6 +768,14 @@ export interface PayloadLockedDocument {
         value: number | Publication;
       } | null)
     | ({
+        relationTo: 'book-chapters';
+        value: number | BookChapter;
+      } | null)
+    | ({
+        relationTo: 'book-files';
+        value: number | BookFile;
+      } | null)
+    | ({
         relationTo: 'events';
         value: number | Event;
       } | null)
@@ -644,14 +808,27 @@ export interface PayloadLockedDocument {
         value: number | TopicSuggestion;
       } | null)
     | ({
+        relationTo: 'orders';
+        value: number | Order;
+      } | null)
+    | ({
+        relationTo: 'members';
+        value: number | Member;
+      } | null)
+    | ({
         relationTo: 'users';
         value: number | User;
       } | null);
   globalSlug?: string | null;
-  user: {
-    relationTo: 'users';
-    value: number | User;
-  };
+  user:
+    | {
+        relationTo: 'members';
+        value: number | Member;
+      }
+    | {
+        relationTo: 'users';
+        value: number | User;
+      };
   updatedAt: string;
   createdAt: string;
 }
@@ -661,10 +838,15 @@ export interface PayloadLockedDocument {
  */
 export interface PayloadPreference {
   id: number;
-  user: {
-    relationTo: 'users';
-    value: number | User;
-  };
+  user:
+    | {
+        relationTo: 'members';
+        value: number | Member;
+      }
+    | {
+        relationTo: 'users';
+        value: number | User;
+      };
   key?: string | null;
   value?:
     | {
@@ -755,6 +937,42 @@ export interface PublicationsSelect<T extends boolean = true> {
   published?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "book-chapters_select".
+ */
+export interface BookChaptersSelect<T extends boolean = true> {
+  number?: T;
+  title?: T;
+  part?: T;
+  content?: T;
+  free?: T;
+  published?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "book-files_select".
+ */
+export interface BookFilesSelect<T extends boolean = true> {
+  title?: T;
+  kind?: T;
+  active?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -869,6 +1087,7 @@ export interface CoachingBookingsSelect<T extends boolean = true> {
   country?: T;
   profile?: T;
   motivation?: T;
+  paymentStatus?: T;
   status?: T;
   note?: T;
   updatedAt?: T;
@@ -922,6 +1141,72 @@ export interface TopicSuggestionsSelect<T extends boolean = true> {
   note?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  reference?: T;
+  status?: T;
+  product?: T;
+  label?: T;
+  amount?: T;
+  currency?: T;
+  email?: T;
+  customerName?: T;
+  shippingAddress?: T;
+  grantsBookAccess?: T;
+  accessDays?: T;
+  editionId?: T;
+  member?: T;
+  coachingBooking?: T;
+  provider?: T;
+  providerSessionId?: T;
+  providerPaymentId?: T;
+  paidAt?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "members_select".
+ */
+export interface MembersSelect<T extends boolean = true> {
+  name?: T;
+  bookAccess?: T;
+  bookAccessUntil?: T;
+  readingChapter?: T;
+  readingPosition?: T;
+  pdfPage?: T;
+  bookmarks?:
+    | T
+    | {
+        chapter?: T;
+        position?: T;
+        page?: T;
+        excerpt?: T;
+        createdAt?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  resetPasswordRequestedAt?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1184,6 +1469,18 @@ export interface Book {
             }[]
           | null;
         available?: boolean | null;
+        /**
+         * Affiche un bouton « Payer par carte ». Fonctionne une fois les clés du prestataire de paiement ajoutées à la mise en ligne.
+         */
+        payByCard?: boolean | null;
+        priceAmount?: number | null;
+        currency?: ('eur' | 'xof' | 'usd' | 'jpy') | null;
+        digitalAccess?: boolean | null;
+        /**
+         * Pour un abonnement : ex. 30 ou 365. Un nouvel achat prolonge l’accès en cours.
+         */
+        accessDays?: number | null;
+        requiresShipping?: boolean | null;
         id?: string | null;
       }[]
     | null;
@@ -1207,6 +1504,12 @@ export interface Coaching {
   intro?: string | null;
   price?: string | null;
   durationWeeks?: number | null;
+  /**
+   * Quand vous passez une réservation en « Confirmée », l’email au participant contient un lien pour régler en ligne.
+   */
+  payByCard?: boolean | null;
+  priceAmount?: number | null;
+  currency?: ('eur' | 'xof' | 'usd' | 'jpy') | null;
   description?: {
     root: {
       type: string;
@@ -1433,6 +1736,12 @@ export interface BookSelect<T extends boolean = true> {
               id?: T;
             };
         available?: T;
+        payByCard?: T;
+        priceAmount?: T;
+        currency?: T;
+        digitalAccess?: T;
+        accessDays?: T;
+        requiresShipping?: T;
         id?: T;
       };
   excerpts?:
@@ -1455,6 +1764,9 @@ export interface CoachingSelect<T extends boolean = true> {
   intro?: T;
   price?: T;
   durationWeeks?: T;
+  payByCard?: T;
+  priceAmount?: T;
+  currency?: T;
   description?: T;
   objectives?:
     | T
