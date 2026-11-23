@@ -74,6 +74,7 @@ export interface Config {
     media: Media;
     videos: Video;
     'video-themes': VideoTheme;
+    orders: Order;
     'coaching-bookings': CoachingBooking;
     appointments: Appointment;
     'contact-messages': ContactMessage;
@@ -93,6 +94,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     videos: VideosSelect<false> | VideosSelect<true>;
     'video-themes': VideoThemesSelect<false> | VideoThemesSelect<true>;
+    orders: OrdersSelect<false> | OrdersSelect<true>;
     'coaching-bookings': CoachingBookingsSelect<false> | CoachingBookingsSelect<true>;
     appointments: AppointmentsSelect<false> | AppointmentsSelect<true>;
     'contact-messages': ContactMessagesSelect<false> | ContactMessagesSelect<true>;
@@ -475,6 +477,48 @@ export interface VideoTheme {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  reference: string;
+  product: 'livre-papier' | 'livre-numerique' | 'accompagnement';
+  label: string;
+  amount: number;
+  shippingFee?: number | null;
+  provider: 'stripe' | 'paypal';
+  customerName?: string | null;
+  customerEmail?: string | null;
+  customerPhone?: string | null;
+  shipping?: {
+    name?: string | null;
+    line1?: string | null;
+    line2?: string | null;
+    postalCode?: string | null;
+    city?: string | null;
+    state?: string | null;
+    country?: string | null;
+  };
+  trackingNumber?: string | null;
+  month?: string | null;
+  coachingBooking?: (number | null) | CoachingBooking;
+  editionId?: string | null;
+  providerId?: string | null;
+  paymentId?: string | null;
+  secret: string;
+  /**
+   * Remettez à 0 si le client a besoin de nouveaux téléchargements.
+   */
+  downloadCount?: number | null;
+  downloadExpiresAt?: string | null;
+  status: 'en-attente' | 'payee' | 'expediee' | 'annulee' | 'remboursee';
+  paidAt?: string | null;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Passez une réservation en « Confirmée » pour envoyer automatiquement un email de confirmation au participant.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -489,7 +533,7 @@ export interface CoachingBooking {
   country?: string | null;
   profile?: ('etudiant' | 'jeune-diplome' | 'professionnel' | 'autre') | null;
   motivation?: string | null;
-  status: 'nouvelle' | 'confirmee' | 'annulee';
+  status: 'nouvelle' | 'attente-paiement' | 'confirmee' | 'annulee';
   note?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -626,6 +670,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'video-themes';
         value: number | VideoTheme;
+      } | null)
+    | ({
+        relationTo: 'orders';
+        value: number | Order;
       } | null)
     | ({
         relationTo: 'coaching-bookings';
@@ -854,6 +902,46 @@ export interface VideoThemesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
   order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  reference?: T;
+  product?: T;
+  label?: T;
+  amount?: T;
+  shippingFee?: T;
+  provider?: T;
+  customerName?: T;
+  customerEmail?: T;
+  customerPhone?: T;
+  shipping?:
+    | T
+    | {
+        name?: T;
+        line1?: T;
+        line2?: T;
+        postalCode?: T;
+        city?: T;
+        state?: T;
+        country?: T;
+      };
+  trackingNumber?: T;
+  month?: T;
+  coachingBooking?: T;
+  editionId?: T;
+  providerId?: T;
+  paymentId?: T;
+  secret?: T;
+  downloadCount?: T;
+  downloadExpiresAt?: T;
+  status?: T;
+  paidAt?: T;
+  note?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1184,9 +1272,33 @@ export interface Book {
             }[]
           | null;
         available?: boolean | null;
+        /**
+         * Affiche les boutons « Carte bancaire » et « PayPal » sous cette édition.
+         */
+        sellOnline?: boolean | null;
+        kind?: ('papier' | 'numerique') | null;
+        /**
+         * Le montant réellement encaissé, par exemple 29.
+         */
+        amount?: number | null;
+        /**
+         * Nom exact du PDF déposé dans le dossier privé « prive » de Supabase Storage (ex. concept-fr.pdf). Ce dossier n’est pas public : le fichier n’est envoyé qu’aux acheteurs.
+         */
+        digitalFile?: string | null;
         id?: string | null;
       }[]
     | null;
+  shop?: {
+    /**
+     * Ajoutés au prix du livre papier. 0 = livraison offerte.
+     */
+    shippingFee?: number | null;
+    /**
+     * Codes pays à 2 lettres, séparés par des virgules (ex. FR,TG,BJ,JP).
+     */
+    shippingCountries?: string | null;
+    deliveryNote?: string | null;
+  };
   excerpts?:
     | {
         image: number | Media;
@@ -1207,6 +1319,10 @@ export interface Coaching {
   intro?: string | null;
   price?: string | null;
   durationWeeks?: number | null;
+  /**
+   * Montant encaissé à la réservation (carte bancaire ou PayPal). Laissez vide pour garder la réservation sans paiement.
+   */
+  amount?: number | null;
   description?: {
     root: {
       type: string;
@@ -1433,7 +1549,18 @@ export interface BookSelect<T extends boolean = true> {
               id?: T;
             };
         available?: T;
+        sellOnline?: T;
+        kind?: T;
+        amount?: T;
+        digitalFile?: T;
         id?: T;
+      };
+  shop?:
+    | T
+    | {
+        shippingFee?: T;
+        shippingCountries?: T;
+        deliveryNote?: T;
       };
   excerpts?:
     | T
@@ -1455,6 +1582,7 @@ export interface CoachingSelect<T extends boolean = true> {
   intro?: T;
   price?: T;
   durationWeeks?: T;
+  amount?: T;
   description?: T;
   objectives?:
     | T

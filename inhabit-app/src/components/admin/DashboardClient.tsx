@@ -6,8 +6,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 export type Req = {
   key: string
   id: number | string
-  collection: 'appointments' | 'coaching-bookings' | 'contact-messages' | 'topic-suggestions'
-  kind: 'rdv' | 'coaching' | 'message' | 'suggestion'
+  collection: 'appointments' | 'coaching-bookings' | 'contact-messages' | 'topic-suggestions' | 'orders'
+  kind: 'rdv' | 'coaching' | 'message' | 'suggestion' | 'commande'
   kindLabel: string
   title: string
   name: string
@@ -247,6 +247,7 @@ const kinds = [
   { value: 'coaching', label: 'Accompagnement' },
   { value: 'message', label: 'Messages' },
   { value: 'suggestion', label: 'Suggestions YouTube' },
+  { value: 'commande', label: 'Commandes payées' },
 ]
 
 const shortcuts: { label: string; hint: string; href: string; icon: IconName; external?: boolean }[] = [
@@ -258,7 +259,7 @@ const shortcuts: { label: string; hint: string; href: string; icon: IconName; ex
   { label: 'Voir le site', hint: 'Nouvel onglet', href: '/', icon: 'globe', external: true },
 ]
 
-const kindIcon: Record<Req['kind'], IconName> = { rdv: 'calendar', coaching: 'book', message: 'mail', suggestion: 'play' }
+const kindIcon: Record<Req['kind'], IconName> = { rdv: 'calendar', coaching: 'book', message: 'mail', suggestion: 'play', commande: 'doc' }
 
 const initialsOf = (name: string) =>
   name

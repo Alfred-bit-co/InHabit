@@ -5,7 +5,7 @@ const BASE = (process.env.NEXT_PUBLIC_SERVER_URL || 'https://in-habit.vercel.app
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: '*', allow: '/', disallow: ['/admin', '/api'] },
+    rules: { userAgent: '*', allow: '/', disallow: ['/admin', '/api', '/paiement', '/telechargement', '/webhooks'] },
     sitemap: `${BASE}/sitemap.xml`,
   }
 }

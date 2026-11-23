@@ -13,6 +13,7 @@ import { Events } from './collections/Events'
 import { migrations } from './migrations'
 import { Media } from './collections/Media'
 import { News } from './collections/News'
+import { Orders } from './collections/Orders'
 import { Projects } from './collections/Projects'
 import { Publications } from './collections/Publications'
 import { Appointments, CoachingBookings, ContactMessages, TopicSuggestions } from './collections/Requests'
@@ -137,6 +138,7 @@ export default buildConfig({
     Media,
     Videos,
     VideoThemes,
+    Orders,
     CoachingBookings,
     Appointments,
     ContactMessages,

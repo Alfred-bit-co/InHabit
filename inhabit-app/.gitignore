@@ -53,3 +53,6 @@ node_modules/
 # Base SQLite locale
 *.db
 *.db-journal
+
+# Livres numériques en local (en production : bucket privé « prive » de Supabase)
+/private/

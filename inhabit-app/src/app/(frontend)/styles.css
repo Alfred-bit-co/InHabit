@@ -1657,6 +1657,47 @@ a.card:hover .card-media img {
   gap: 8px;
   margin-top: auto;
 }
+/* Paiement en ligne sous une édition (carte bancaire / PayPal) */
+.edition .pay-online {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.edition .pay-online .links {
+  margin-top: 0;
+}
+.pay-online-label {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.pay-online-label strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.pay-online .form-status {
+  margin: 0;
+}
+
+/* Pages de retour de paiement */
+.receipt {
+  display: grid;
+  gap: 14px;
+  max-width: 640px;
+}
+.receipt dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 10px 24px;
+  margin: 0;
+}
+.receipt dt {
+  color: var(--muted);
+}
+.receipt dd {
+  margin: 0;
+  font-weight: 500;
+}
 
 .excerpts {
   display: grid;

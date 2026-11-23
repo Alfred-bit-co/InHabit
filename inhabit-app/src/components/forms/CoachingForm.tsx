@@ -2,13 +2,20 @@
 
 import { submitCoaching } from '@/app/(frontend)/actions'
 import type { MonthAvailability } from '@/lib/availability'
+import type { Provider } from '@/lib/payments/config'
+import { PROVIDER_CHOICES } from './PaymentChoices'
 import { Field, Honeypot, Status, Submit, useFormAction } from './FormParts'
 
 const placesLabel = (m: MonthAvailability) =>
   m.full ? 'Complet' : m.displayed <= 1 ? 'Dernière place' : `${m.displayed} places restantes`
 
-export function CoachingForm({ months }: { months: MonthAvailability[] }) {
+type Props = { months: MonthAvailability[]; providers?: Provider[]; priceLabel?: string }
+
+export function CoachingForm({ months, providers = [], priceLabel }: Props) {
   const { state, pending, ref, onSubmit } = useFormAction(submitCoaching)
+  const payOnline = providers.length > 0
+  const providerErr = state.errors?.provider
+  const redirecting = state.ok && Boolean(state.redirect)
 
   if (!months.length) {
     return (
@@ -70,11 +77,51 @@ export function CoachingForm({ months }: { months: MonthAvailability[] }) {
       <Field name="motivation" label="Vos objectifs et votre motivation *" state={state}>
         <textarea id="motivation" name="motivation" rows={5} required />
       </Field>
+      {payOnline && (
+        <fieldset
+          className="field"
+          style={{ border: 0, padding: 0, margin: 0 }}
+          data-invalid={providerErr ? 'true' : undefined}
+        >
+          <legend>Moyen de paiement *</legend>
+          <div className="choices" style={{ marginTop: 8 }}>
+            {PROVIDER_CHOICES.filter((c) => providers.includes(c.value)).map((c, i) => (
+              <label key={c.value} className="choice">
+                <input type="radio" name="provider" value={c.value} defaultChecked={i === 0} required />
+                <span>
+                  <strong>{c.label}</strong>
+                  <small>{c.hint}</small>
+                </span>
+              </label>
+            ))}
+          </div>
+          {providerErr && (
+            <span className="error" role="alert">
+              {providerErr}
+            </span>
+          )}
+        </fieldset>
+      )}
       <Status state={state} />
-      <Submit pending={pending}>Réserver ma place</Submit>
-      <p className="form-note">
-        Votre demande est confirmée par email après validation. Aucun paiement n’est demandé à cette étape.
-      </p>
+      {payOnline ? (
+        <>
+          <Submit pending={pending || redirecting} pendingLabel="Redirection vers le paiement…">
+            Réserver et payer{priceLabel ? ` ${priceLabel}` : ''}
+          </Submit>
+          <p className="form-note">
+            Paiement sécurisé par {providers.map((p) => (p === 'paypal' ? 'PayPal' : 'Stripe')).join(' ou ')} : vos
+            coordonnées bancaires ne passent jamais par ce site. Votre place
+            est bloquée 30 minutes, le temps du paiement, puis confirmée par email.
+          </p>
+        </>
+      ) : (
+        <>
+          <Submit pending={pending}>Réserver ma place</Submit>
+          <p className="form-note">
+            Votre demande est confirmée par email après validation. Aucun paiement n’est demandé à cette étape.
+          </p>
+        </>
+      )}
     </form>
   )
 }

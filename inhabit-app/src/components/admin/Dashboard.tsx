@@ -4,6 +4,7 @@ import type { About, Coaching, Media } from '@/payload-types'
 import { computeMonths } from '@/lib/availability'
 import { formatMonthFr, toISODate, toISOMonth } from '@/lib/dates'
 import { CONTACT_REASONS } from '@/lib/constants'
+import { HOLD_MINUTES } from '@/lib/payments/config'
 import { DashboardClient, type DashData, type Req } from './DashboardClient'
 
 /* Tableau de bord de l'admin : chiffres clés, graphiques et demandes reçues. */
@@ -13,7 +14,8 @@ type Props = { payload: Payload; user?: { name?: string | null; email?: string |
 const DAY = 86_400_000
 
 const labels = {
-  coaching: { nouvelle: 'À traiter', confirmee: 'Confirmée', annulee: 'Annulée' },
+  coaching: { nouvelle: 'À traiter', 'attente-paiement': 'Paiement en cours', confirmee: 'Confirmée', annulee: 'Annulée' },
+  orders: { payee: 'Payée', expediee: 'Expédiée / terminée', remboursee: 'Remboursée' },
   appointments: { confirme: 'Confirmé', effectue: 'Effectué', annule: 'Annulé' },
   messages: { nouveau: 'Nouveau', 'en-cours': 'En cours', traite: 'Traité' },
   suggestions: { nouveau: 'Nouvelle', retenu: 'Retenue', traite: 'En vidéo', ecarte: 'Écartée' },
@@ -72,7 +74,7 @@ export async function Dashboard({ payload, user }: Props) {
   const today = toISODate(now)
   const q = { limit: 500, depth: 0, pagination: false, overrideAccess: true } as const
 
-  const [coaching, appointments, messages, suggestions, coachingGlobal, project, counts, about] = await Promise.all([
+  const [coaching, appointments, messages, suggestions, coachingGlobal, project, counts, about, orders] = await Promise.all([
     payload.find({ collection: 'coaching-bookings', sort: '-createdAt', ...q }),
     payload.find({ collection: 'appointments', sort: '-createdAt', ...q }),
     payload.find({ collection: 'contact-messages', sort: '-createdAt', ...q }),
@@ -85,6 +87,12 @@ export async function Dashboard({ payload, user }: Props) {
       ),
     ),
     payload.findGlobal({ slug: 'about', depth: 1 }) as Promise<About>,
+    payload.find({
+      collection: 'orders',
+      sort: '-createdAt',
+      where: { status: { in: ['payee', 'expediee', 'remboursee'] } },
+      ...q,
+    }),
   ])
 
   /* ── Demandes reçues, toutes collections confondues ── */
@@ -124,6 +132,7 @@ export async function Dashboard({ payload, user }: Props) {
   }
 
   for (const d of coaching.docs) {
+    if (d.status === 'attente-paiement') continue // pas encore payée : n'apparaît qu'une fois le paiement reçu
     reqs.push({
       key: `coaching-bookings-${d.id}`,
       id: d.id,
@@ -151,6 +160,41 @@ export async function Dashboard({ payload, user }: Props) {
         { label: 'Tarif', value: coachingGlobal.price || '—' },
       ],
       action: d.status === 'nouvelle' ? { status: 'confirmee', label: 'Confirmer la place' } : undefined,
+    })
+  }
+
+  for (const d of orders.docs) {
+    const paper = d.product === 'livre-papier'
+    const address = [d.shipping?.line1, [d.shipping?.postalCode, d.shipping?.city].filter(Boolean).join(' '), d.shipping?.country]
+      .filter(Boolean)
+      .join(', ')
+    reqs.push({
+      key: `orders-${d.id}`,
+      id: d.id,
+      collection: 'orders',
+      kind: 'commande',
+      kindLabel: 'Commande payée en ligne',
+      title: 'Commande',
+      name: d.customerName || d.customerEmail || d.reference,
+      email: d.customerEmail || '',
+      status: d.status,
+      statusLabel: labels.orders[d.status as keyof typeof labels.orders] ?? d.status,
+      pending: paper && d.status === 'payee',
+      createdAt: d.paidAt || d.createdAt,
+      when: relative(new Date(d.paidAt || d.createdAt), now),
+      value: `${d.amount} €`,
+      tiles: [
+        { label: 'Article', value: d.label },
+        { label: 'Montant', value: `${d.amount} €` },
+        { label: 'Paiement', value: d.provider === 'paypal' ? 'PayPal' : 'Carte (Stripe)' },
+      ],
+      text: paper ? `À expédier à : ${d.shipping?.name ? `${d.shipping.name}, ` : ''}${address || 'adresse non communiquée'}` : null,
+      footer: [
+        { label: 'Référence', value: d.reference },
+        { label: 'Téléphone', value: d.customerPhone || '—' },
+        { label: 'Payée le', value: d.paidAt ? shortDate(d.paidAt) : '—' },
+      ],
+      action: paper && d.status === 'payee' ? { status: 'expediee', label: 'Marquer expédiée' } : undefined,
     })
   }
 
@@ -253,7 +297,12 @@ export async function Dashboard({ payload, user }: Props) {
 
   /* ── Carte 4 : places de l'accompagnement ── */
   const booked: Record<string, number> = {}
-  for (const b of coaching.docs) if (b.status !== 'annulee') booked[b.month] = (booked[b.month] ?? 0) + 1
+  const holdLimit = now.getTime() - HOLD_MINUTES * 60_000
+  for (const b of coaching.docs) {
+    if (b.status === 'annulee') continue
+    if (b.status === 'attente-paiement' && new Date(b.createdAt).getTime() < holdLimit) continue
+    booked[b.month] = (booked[b.month] ?? 0) + 1
+  }
   const months = computeMonths(coachingGlobal, booked, now)
     .slice(0, 3)
     .map((m) => ({

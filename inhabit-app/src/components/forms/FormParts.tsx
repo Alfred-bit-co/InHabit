@@ -18,6 +18,11 @@ export function useFormAction(action: (state: FormState, fd: FormData) => Promis
 
   useEffect(() => {
     if (!state.ok) return
+    // Paiement : on part sur la page sécurisée de Stripe ou PayPal, sans vider le formulaire
+    if (state.redirect) {
+      window.location.assign(state.redirect)
+      return
+    }
     ref.current?.reset()
     router.refresh() // met à jour les places / créneaux affichés
   }, [state, router])
@@ -70,14 +75,16 @@ export function Submit({
   children,
   pending,
   className = 'btn btn-accent',
+  pendingLabel = 'Envoi en cours…',
 }: {
   children: React.ReactNode
   pending: boolean
   className?: string
+  pendingLabel?: string
 }) {
   return (
     <button type="submit" className={className} disabled={pending} style={{ justifySelf: 'start' }}>
-      {pending ? 'Envoi en cours…' : children}
+      {pending ? pendingLabel : children}
     </button>
   )
 }

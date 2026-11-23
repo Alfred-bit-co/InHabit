@@ -3,7 +3,9 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { ProductsNav } from '@/components/ProductsNav'
 import { RichText } from '@/components/RichText'
+import { BookPayButtons } from '@/components/forms/PaymentChoices'
 import { getPayloadClient, isMedia, mediaAlt, mediaUrl } from '@/lib/payload'
+import { enabledProviders, formatEuros } from '@/lib/payments/config'
 
 export async function generateMetadata(): Promise<Metadata> {
   const payload = await getPayloadClient()
@@ -16,6 +18,19 @@ export default async function BookPage() {
   const book = await payload.findGlobal({ slug: 'book', depth: 1 })
   const editions = book.editions ?? []
   const excerpts = (book.excerpts ?? []).filter((e) => isMedia(e.image))
+  const providers = enabledProviders()
+  const shippingFee = book.shop?.shippingFee ?? 0
+  const sellable = (ed: (typeof editions)[number]) =>
+    providers.length > 0 &&
+    ed.sellOnline &&
+    ed.available !== false &&
+    !!ed.amount &&
+    ed.amount > 0 &&
+    (ed.kind !== 'numerique' || !!ed.digitalFile)
+  const priceLabel = (ed: (typeof editions)[number]) =>
+    ed.kind === 'numerique' || shippingFee <= 0
+      ? `${formatEuros(ed.amount)}${ed.kind === 'numerique' ? '' : ' · livraison offerte'}`
+      : `${formatEuros(ed.amount)} + ${formatEuros(shippingFee)} de livraison`
 
   return (
     <>
@@ -117,6 +132,14 @@ export default async function BookPage() {
                       ))
                     )}
                   </div>
+                  {sellable(ed) && (
+                    <BookPayButtons
+                      editionId={ed.id ?? ''}
+                      providers={providers}
+                      priceLabel={priceLabel(ed)}
+                      note={ed.kind === 'numerique' ? 'PDF envoyé immédiatement par email' : book.shop?.deliveryNote}
+                    />
+                  )}
                 </div>
               ))}
             </div>

@@ -4,11 +4,26 @@ import { computeAvailability, computeMonths } from '@/lib/availability'
 import { formatDateFr, formatMonthFr } from '@/lib/dates'
 import { getPayloadClient } from '@/lib/payload'
 import { CONTACT_REASONS } from '@/lib/constants'
+import { enabledProviders, formatEuros, type Provider } from '@/lib/payments/config'
+import {
+  activeBookingWhere,
+  CheckoutError,
+  getSellableEdition,
+  releaseStaleHolds,
+  startCheckout,
+} from '@/lib/payments/orders'
 
 export type FormState = {
   ok: boolean
   message: string
   errors?: Record<string, string>
+  /** Adresse de la page de paiement (Stripe ou PayPal) vers laquelle envoyer le visiteur. */
+  redirect?: string
+}
+
+const pickProvider = (fd: FormData): Provider | null => {
+  const value = String(fd.get('provider') ?? '')
+  return enabledProviders().find((p) => p === value) ?? null
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
@@ -112,11 +127,12 @@ export async function submitCoaching(_: FormState, fd: FormData): Promise<FormSt
 
   try {
     const payload = await getPayloadClient()
+    await releaseStaleHolds().catch(() => undefined)
     const [coaching, bookings] = await Promise.all([
       payload.findGlobal({ slug: 'coaching', depth: 0 }),
       payload.find({
         collection: 'coaching-bookings',
-        where: { and: [{ month: { equals: data.month } }, { status: { not_equals: 'annulee' } }] },
+        where: { and: [{ month: { equals: data.month } }, activeBookingWhere()] },
         limit: 0,
         depth: 0,
       }),
@@ -126,6 +142,32 @@ export async function submitCoaching(_: FormState, fd: FormData): Promise<FormSt
     )
     if (!month) return fail({ month: 'Ce mois n’est plus proposé.' })
     if (month.full) return fail({ month: `Il n’y a plus de place en ${formatMonthFr(data.month)}.` })
+
+    // Paiement en ligne actif : la place est bloquée 35 minutes, le temps de payer.
+    const price = coaching.amount ?? 0
+    const providers = enabledProviders()
+    if (price > 0 && providers.length) {
+      const provider = pickProvider(fd)
+      if (!provider) return fail({ provider: 'Choisissez un moyen de paiement.' })
+      const booking = await payload.create({
+        collection: 'coaching-bookings',
+        data: {
+          ...data,
+          profile: (data.profile || undefined) as 'autre' | undefined,
+          status: 'attente-paiement',
+        },
+      })
+      const redirect = await startCheckout({
+        provider,
+        product: 'accompagnement',
+        label: `${coaching.title || 'Accompagnement CONCEPT'} — ${formatMonthFr(data.month)}`,
+        price,
+        month: data.month,
+        coachingBookingId: booking.id,
+        customer: { name: data.name, email: data.email, phone: data.phone },
+      })
+      return { ok: true, message: `Redirection vers le paiement sécurisé (${formatEuros(price)})…`, redirect }
+    }
 
     await payload.create({
       collection: 'coaching-bookings',
@@ -140,6 +182,7 @@ export async function submitCoaching(_: FormState, fd: FormData): Promise<FormSt
       message: `Votre demande pour ${formatMonthFr(data.month)} est enregistrée. Vous recevrez un email de confirmation.`,
     }
   } catch (err) {
+    if (err instanceof CheckoutError) return { ok: false, message: err.message }
     console.error(err)
     return serverError
   }
@@ -198,6 +241,23 @@ export async function submitAppointment(_: FormState, fd: FormData): Promise<For
       message: `Votre rendez-vous est confirmé pour le ${formatDateFr(data.date)} à ${data.slot}. Un email récapitulatif vous a été envoyé.`,
     }
   } catch (err) {
+    console.error(err)
+    return serverError
+  }
+}
+
+/* ───────────── Achat du livre CONCEPT ───────────── */
+
+export async function startBookCheckout(_: FormState, fd: FormData): Promise<FormState> {
+  const provider = pickProvider(fd)
+  if (!provider) return { ok: false, message: 'Ce moyen de paiement n’est pas disponible.' }
+  try {
+    const edition = await getSellableEdition(String(fd.get('edition') ?? ''))
+    if (!edition) return { ok: false, message: 'Cette édition n’est plus en vente en ligne.' }
+    const redirect = await startCheckout({ provider, ...edition })
+    return { ok: true, message: 'Redirection vers le paiement sécurisé…', redirect }
+  } catch (err) {
+    if (err instanceof CheckoutError) return { ok: false, message: err.message }
     console.error(err)
     return serverError
   }

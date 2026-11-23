@@ -33,6 +33,8 @@ export const notifyOnCreate =
   ): CollectionAfterChangeHook =>
   async ({ doc, operation, req }) => {
     if (operation !== 'create') return doc
+    // Réservation qui attend son paiement en ligne : les emails partent une fois le paiement reçu.
+    if (doc.status === 'attente-paiement') return doc
     const adminEmail = await getAdminEmail(req)
     await safeSend(req, { to: adminEmail, subject: `[InHabit] ${label}`, html: summary(doc) })
     const mail = confirmation?.(doc)

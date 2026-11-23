@@ -288,6 +288,85 @@ export const Book: GlobalConfig = {
           ],
         },
         { name: 'available', type: 'checkbox', label: 'Disponible', defaultValue: true },
+        {
+          type: 'collapsible',
+          label: 'Vente en ligne (carte bancaire / PayPal)',
+          admin: { initCollapsed: false },
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'sellOnline',
+                  type: 'checkbox',
+                  label: 'Payer directement sur le site',
+                  defaultValue: false,
+                  admin: { description: 'Affiche les boutons « Carte bancaire » et « PayPal » sous cette édition.' },
+                },
+                {
+                  name: 'kind',
+                  type: 'select',
+                  label: 'Type',
+                  defaultValue: 'papier',
+                  options: [
+                    { label: 'Livre papier (à expédier)', value: 'papier' },
+                    { label: 'Livre numérique (PDF envoyé automatiquement)', value: 'numerique' },
+                  ],
+                },
+                {
+                  name: 'amount',
+                  type: 'number',
+                  label: 'Prix payé en ligne (€)',
+                  min: 1,
+                  admin: { step: 0.01, description: 'Le montant réellement encaissé, par exemple 29.' },
+                },
+              ],
+            },
+            {
+              name: 'digitalFile',
+              type: 'text',
+              label: 'Fichier du livre numérique',
+              admin: {
+                condition: (_, siblingData) => siblingData?.kind === 'numerique',
+                description:
+                  'Nom exact du PDF déposé dans le dossier privé « prive » de Supabase Storage (ex. concept-fr.pdf). Ce dossier n’est pas public : le fichier n’est envoyé qu’aux acheteurs.',
+              },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'shop',
+      type: 'group',
+      label: 'Livraison du livre papier',
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'shippingFee',
+              type: 'number',
+              label: 'Frais de livraison (€)',
+              min: 0,
+              defaultValue: 0,
+              admin: { step: 0.01, description: 'Ajoutés au prix du livre papier. 0 = livraison offerte.' },
+            },
+            {
+              name: 'shippingCountries',
+              type: 'text',
+              label: 'Pays de livraison',
+              defaultValue: 'FR,BE,CH,LU,CA,TG,BJ,CI,SN,BF,ML,NE,GN,CM,GA,CG,CD,GH,NG,JP,US,GB,DE',
+              admin: { description: 'Codes pays à 2 lettres, séparés par des virgules (ex. FR,TG,BJ,JP).' },
+            },
+          ],
+        },
+        {
+          name: 'deliveryNote',
+          type: 'text',
+          label: 'Délai d’expédition annoncé',
+          defaultValue: 'Expédition sous 7 à 14 jours',
+        },
       ],
     },
     {
@@ -325,6 +404,17 @@ export const Coaching: GlobalConfig = {
       fields: [
         { name: 'price', type: 'text', label: 'Tarif affiché (ex. 250 €)' },
         { name: 'durationWeeks', type: 'number', label: 'Durée (semaines)', defaultValue: 4 },
+        {
+          name: 'amount',
+          type: 'number',
+          label: 'Prix payé en ligne (€)',
+          min: 1,
+          admin: {
+            step: 0.01,
+            description:
+              'Montant encaissé à la réservation (carte bancaire ou PayPal). Laissez vide pour garder la réservation sans paiement.',
+          },
+        },
       ],
     },
     { name: 'description', type: 'richText', label: 'Fonctionnement' },

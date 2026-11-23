@@ -1,6 +1,6 @@
 import type { CollectionAfterChangeHook, CollectionConfig } from 'payload'
 import { adminOnly } from '../access'
-import { notifyOnCreate, safeSend } from '../hooks/notify'
+import { getAdminEmail, notifyOnCreate, safeSend } from '../hooks/notify'
 import { emailTable, escapeHtml } from '../lib/escape'
 import { formatDateFr, formatMonthFr } from '../lib/dates'
 import { CONTACT_REASONS } from '../lib/constants'
@@ -28,9 +28,35 @@ const signature = '<p style="font-family:Arial,sans-serif;color:#888">— InHabi
 
 /* ───────────── Accompagnement CONCEPT ───────────── */
 
+const coachingSummary = (d: any) =>
+  emailTable([
+    ['Nom', d.name],
+    ['Email', d.email],
+    ['Téléphone', d.phone],
+    ['Mois', formatMonthFr(d.month)],
+    ['Pays', d.country],
+    ['Profil', d.profile],
+    ['Motivation', d.motivation],
+  ])
+
 const coachingStatusMail: CollectionAfterChangeHook = async ({ doc, previousDoc, operation, req }) => {
   if (operation !== 'update' || doc.status === previousDoc?.status) return doc
   const month = formatMonthFr(doc.month)
+  // Réservation payée en ligne : la commande envoie déjà le reçu ; on prévient Warren
+  // de la nouvelle participante ou du nouveau participant.
+  if (previousDoc?.status === 'attente-paiement') {
+    if (doc.status === 'confirmee') {
+      const adminEmail = await getAdminEmail(req)
+      await safeSend(req, {
+        to: adminEmail,
+        subject: '[InHabit] Nouvelle réservation payée — Accompagnement CONCEPT',
+        html: coachingSummary(doc),
+      })
+    }
+    // Le reçu de paiement (commande) sert de confirmation au participant ;
+    // paiement abandonné : la place est libérée sans email.
+    return doc
+  }
   if (doc.status === 'confirmee') {
     await safeSend(req, {
       to: doc.email,
@@ -98,6 +124,7 @@ export const CoachingBookings: CollectionConfig = {
     statusField(
       [
         { label: 'Nouvelle (à traiter)', value: 'nouvelle' },
+        { label: 'En attente de paiement', value: 'attente-paiement' },
         { label: 'Confirmée', value: 'confirmee' },
         { label: 'Annulée', value: 'annulee' },
       ],
@@ -109,16 +136,7 @@ export const CoachingBookings: CollectionConfig = {
     afterChange: [
       notifyOnCreate(
         'Nouvelle réservation — Accompagnement CONCEPT',
-        (d) =>
-          emailTable([
-            ['Nom', d.name],
-            ['Email', d.email],
-            ['Téléphone', d.phone],
-            ['Mois', formatMonthFr(d.month)],
-            ['Pays', d.country],
-            ['Profil', d.profile],
-            ['Motivation', d.motivation],
-          ]),
+        coachingSummary,
         (d) => ({
           to: d.email,
           subject: 'Nous avons bien reçu votre demande — Accompagnement CONCEPT',

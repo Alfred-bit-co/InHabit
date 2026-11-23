@@ -4,6 +4,8 @@ import { ProductsNav } from '@/components/ProductsNav'
 import { RichText } from '@/components/RichText'
 import { computeMonths } from '@/lib/availability'
 import { getPayloadClient } from '@/lib/payload'
+import { enabledProviders, formatEuros } from '@/lib/payments/config'
+import { activeBookingWhere } from '@/lib/payments/orders'
 
 export const metadata: Metadata = {
   title: 'Accompagnement CONCEPT',
@@ -18,7 +20,7 @@ export default async function CoachingPage() {
   const bookings = monthKeys.length
     ? await payload.find({
         collection: 'coaching-bookings',
-        where: { and: [{ month: { in: monthKeys } }, { status: { not_equals: 'annulee' } }] },
+        where: { and: [{ month: { in: monthKeys } }, activeBookingWhere()] },
         limit: 0,
         depth: 0,
         pagination: false,
@@ -75,7 +77,11 @@ export default async function CoachingPage() {
           <div className="panel" id="reserver">
             <h2 style={{ fontSize: '1.8rem' }}>Réserver ma place</h2>
             <p className="muted">Choisissez le mois durant lequel vous souhaitez être accompagné·e.</p>
-            <CoachingForm months={months} />
+            <CoachingForm
+              months={months}
+              providers={coaching.amount && coaching.amount > 0 ? enabledProviders() : []}
+              priceLabel={formatEuros(coaching.amount)}
+            />
           </div>
         </div>
       </section>
