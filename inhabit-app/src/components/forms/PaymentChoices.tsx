@@ -8,6 +8,7 @@ import { initialState } from './FormParts'
 export const PROVIDER_CHOICES: { value: Provider; label: string; hint: string }[] = [
   { value: 'stripe', label: 'Carte bancaire', hint: 'Visa, Mastercard, Apple Pay, Google Pay' },
   { value: 'paypal', label: 'PayPal', hint: 'Compte PayPal ou carte via PayPal' },
+  { value: 'fedapay', label: 'Mobile Money', hint: 'T-Money, Flooz, MTN, Wave ou carte · en FCFA' },
 ]
 
 type Props = {
@@ -16,10 +17,12 @@ type Props = {
   /** ex. « 29 € », « 29 € + 6 € de livraison » */
   priceLabel: string
   note?: string | null
+  /** Montant en francs CFA affiché pour le paiement Mobile Money */
+  xofLabel?: string
 }
 
 /** Boutons « Carte bancaire » et « PayPal » sous une édition du livre. */
-export function BookPayButtons({ editionId, providers, priceLabel, note }: Props) {
+export function BookPayButtons({ editionId, providers, priceLabel, note, xofLabel }: Props) {
   const [state, dispatch, pending] = useActionState(startBookCheckout, initialState)
   const [clicked, setClicked] = useState<Provider | null>(null)
   const redirecting = state.ok && Boolean(state.redirect)
@@ -62,6 +65,9 @@ export function BookPayButtons({ editionId, providers, priceLabel, note }: Props
         ))}
       </div>
       {note && <small className="muted">{note}</small>}
+      {providers.includes('fedapay') && xofLabel && (
+        <small className="muted">Mobile Money : {xofLabel}, via FedaPay</small>
+      )}
       {!state.ok && state.message && (
         <p className="form-status ko" role="status" aria-live="polite">
           {state.message}

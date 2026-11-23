@@ -487,7 +487,7 @@ export interface Order {
   label: string;
   amount: number;
   shippingFee?: number | null;
-  provider: 'stripe' | 'paypal';
+  provider: 'stripe' | 'paypal' | 'fedapay';
   customerName?: string | null;
   customerEmail?: string | null;
   customerPhone?: string | null;

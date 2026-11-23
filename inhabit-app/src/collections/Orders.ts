@@ -3,7 +3,7 @@ import { adminOnly } from '../access'
 import { getAdminEmail, safeSend } from '../hooks/notify'
 import { formatMonthFr } from '../lib/dates'
 import { emailTable, escapeHtml } from '../lib/escape'
-import { formatEuros, siteUrl } from '../lib/payments/config'
+import { formatEuros, formatXof, providerLabel, siteUrl } from '../lib/payments/config'
 
 export const ORDER_STATUSES = [
   { label: 'En attente de paiement', value: 'en-attente' },
@@ -45,7 +45,7 @@ const addressLines = (d: any) =>
 const orderStatusMail: CollectionAfterChangeHook = async ({ doc, previousDoc, operation, req }) => {
   if (operation !== 'update' || doc.status === previousDoc?.status) return doc
   const first = escapeHtml(String(doc.customerName || '').split(' ')[0] || 'Bonjour')
-  const amount = formatEuros(doc.amount)
+  const amount = `${formatEuros(doc.amount)}${doc.provider === 'fedapay' ? ` (${formatXof(doc.amount)})` : ''}`
 
   if (doc.status === 'payee') {
     const adminEmail = await getAdminEmail(req)
@@ -56,7 +56,7 @@ const orderStatusMail: CollectionAfterChangeHook = async ({ doc, previousDoc, op
         ['Référence', doc.reference],
         ['Produit', doc.label],
         ['Montant', amount],
-        ['Paiement', doc.provider === 'paypal' ? 'PayPal' : 'Carte bancaire (Stripe)'],
+        ['Paiement', providerLabel(doc.provider)],
         ['Client', doc.customerName],
         ['Email', doc.customerEmail],
         ['Téléphone', doc.customerPhone],
@@ -143,6 +143,7 @@ export const Orders: CollectionConfig = {
           options: [
             { label: 'Carte bancaire (Stripe)', value: 'stripe' },
             { label: 'PayPal', value: 'paypal' },
+            { label: 'Mobile Money / carte (FedaPay)', value: 'fedapay' },
           ],
           admin: { readOnly: true },
         },

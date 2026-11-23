@@ -9,9 +9,9 @@ import { Field, Honeypot, Status, Submit, useFormAction } from './FormParts'
 const placesLabel = (m: MonthAvailability) =>
   m.full ? 'Complet' : m.displayed <= 1 ? 'Dernière place' : `${m.displayed} places restantes`
 
-type Props = { months: MonthAvailability[]; providers?: Provider[]; priceLabel?: string }
+type Props = { months: MonthAvailability[]; providers?: Provider[]; priceLabel?: string; xofLabel?: string }
 
-export function CoachingForm({ months, providers = [], priceLabel }: Props) {
+export function CoachingForm({ months, providers = [], priceLabel, xofLabel }: Props) {
   const { state, pending, ref, onSubmit } = useFormAction(submitCoaching)
   const payOnline = providers.length > 0
   const providerErr = state.errors?.provider
@@ -90,7 +90,7 @@ export function CoachingForm({ months, providers = [], priceLabel }: Props) {
                 <input type="radio" name="provider" value={c.value} defaultChecked={i === 0} required />
                 <span>
                   <strong>{c.label}</strong>
-                  <small>{c.hint}</small>
+                  <small>{c.value === 'fedapay' && xofLabel ? `${xofLabel} · T-Money, Flooz, MTN, Wave, carte` : c.hint}</small>
                 </span>
               </label>
             ))}
@@ -109,7 +109,8 @@ export function CoachingForm({ months, providers = [], priceLabel }: Props) {
             Réserver et payer{priceLabel ? ` ${priceLabel}` : ''}
           </Submit>
           <p className="form-note">
-            Paiement sécurisé par {providers.map((p) => (p === 'paypal' ? 'PayPal' : 'Stripe')).join(' ou ')} : vos
+            Paiement sécurisé par{' '}
+            {providers.map((p) => (p === 'paypal' ? 'PayPal' : p === 'fedapay' ? 'FedaPay' : 'Stripe')).join(', ')} : vos
             coordonnées bancaires ne passent jamais par ce site. Votre place
             est bloquée 30 minutes, le temps du paiement, puis confirmée par email.
           </p>

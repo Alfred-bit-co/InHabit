@@ -1,6 +1,7 @@
 import * as migration_20261113_103247_initial from './20261113_103247_initial';
 import * as migration_20261115_120818_media_alt_facultatif from './20261115_120818_media_alt_facultatif';
 import * as migration_20261123_002425_paiements_en_ligne from './20261123_002425_paiements_en_ligne';
+import * as migration_20261123_005618_paiements_fedapay from './20261123_005618_paiements_fedapay';
 
 export const migrations = [
   {
@@ -16,6 +17,11 @@ export const migrations = [
   {
     up: migration_20261123_002425_paiements_en_ligne.up,
     down: migration_20261123_002425_paiements_en_ligne.down,
-    name: '20261123_002425_paiements_en_ligne'
+    name: '20261123_002425_paiements_en_ligne',
+  },
+  {
+    up: migration_20261123_005618_paiements_fedapay.up,
+    down: migration_20261123_005618_paiements_fedapay.down,
+    name: '20261123_005618_paiements_fedapay'
   },
 ];

@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { AutoRefresh } from '@/components/AutoRefresh'
 import { formatMonthFr } from '@/lib/dates'
-import { formatEuros } from '@/lib/payments/config'
+import { formatEuros, formatXof, providerLabel } from '@/lib/payments/config'
+import { fedapayResult, getFedaPayTransaction } from '@/lib/payments/fedapay'
 import { findOrderBySecret, markOrderPaid } from '@/lib/payments/orders'
 import { stripe, stripeCustomer } from '@/lib/payments/stripe'
 
@@ -36,6 +37,16 @@ export default async function ThankYouPage({ searchParams }: Props) {
       if (session.payment_status === 'paid') order = await markOrderPaid(order, stripeCustomer(session))
     } catch {
       // le webhook prendra le relais
+    }
+  }
+
+  // FedaPay : on redemande l'état de la transaction (Mobile Money peut prendre quelques secondes).
+  if (order.status === 'en-attente' && order.provider === 'fedapay' && order.providerId) {
+    try {
+      const result = await fedapayResult(await getFedaPayTransaction(order.providerId))
+      if (result.completed) order = await markOrderPaid(order, result)
+    } catch {
+      // le webhook ou le prochain rafraîchissement prendra le relais
     }
   }
 
@@ -108,9 +119,12 @@ export default async function ThankYouPage({ searchParams }: Props) {
                 </>
               )}
               <dt>Montant payé</dt>
-              <dd>{formatEuros(order.amount)}</dd>
+              <dd>
+                {formatEuros(order.amount)}
+                {order.provider === 'fedapay' ? ` (${formatXof(order.amount)})` : ''}
+              </dd>
               <dt>Paiement</dt>
-              <dd>{order.provider === 'paypal' ? 'PayPal' : 'Carte bancaire'}</dd>
+              <dd>{providerLabel(order.provider)}</dd>
               {order.product === 'livre-papier' && address && (
                 <>
                   <dt>Livraison</dt>

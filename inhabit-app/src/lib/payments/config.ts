@@ -18,13 +18,28 @@ export const DOWNLOAD_MAX = 10
 
 export const stripeEnabled = () => Boolean(process.env.STRIPE_SECRET_KEY)
 export const paypalEnabled = () => Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET)
+export const fedapayEnabled = () => Boolean(process.env.FEDAPAY_SECRET_KEY)
 
-export type Provider = 'stripe' | 'paypal'
+export type Provider = 'stripe' | 'paypal' | 'fedapay'
 
 export const enabledProviders = (): Provider[] => [
   ...(stripeEnabled() ? (['stripe'] as const) : []),
   ...(paypalEnabled() ? (['paypal'] as const) : []),
+  ...(fedapayEnabled() ? (['fedapay'] as const) : []),
 ]
+
+/** FedaPay ne gère pas d'adresse de livraison : il est proposé pour le PDF et l'accompagnement. */
+export const providerSupportsShipping = (p: Provider) => p !== 'fedapay'
+
+export const providerLabel = (p?: string | null) =>
+  p === 'paypal' ? 'PayPal' : p === 'fedapay' ? 'Mobile Money / carte (FedaPay)' : 'Carte bancaire (Stripe)'
+
+/** Parité fixe euro / franc CFA (BCEAO) : 1 € = 655,957 FCFA. */
+export const XOF_PER_EUR = 655.957
+export const toXof = (euros: number) => Math.round(euros * XOF_PER_EUR)
+export const fromXof = (xof: number) => xof / XOF_PER_EUR
+export const formatXof = (euros?: number | null) =>
+  typeof euros === 'number' ? `${new Intl.NumberFormat('fr-FR').format(toXof(euros))} FCFA` : ''
 
 export const siteUrl = () => (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000').replace(/\/$/, '')
 

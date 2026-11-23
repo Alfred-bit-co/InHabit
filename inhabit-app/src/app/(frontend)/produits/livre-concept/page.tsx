@@ -5,7 +5,7 @@ import { ProductsNav } from '@/components/ProductsNav'
 import { RichText } from '@/components/RichText'
 import { BookPayButtons } from '@/components/forms/PaymentChoices'
 import { getPayloadClient, isMedia, mediaAlt, mediaUrl } from '@/lib/payload'
-import { enabledProviders, formatEuros } from '@/lib/payments/config'
+import { enabledProviders, formatEuros, formatXof, providerSupportsShipping } from '@/lib/payments/config'
 
 export async function generateMetadata(): Promise<Metadata> {
   const payload = await getPayloadClient()
@@ -135,8 +135,9 @@ export default async function BookPage() {
                   {sellable(ed) && (
                     <BookPayButtons
                       editionId={ed.id ?? ''}
-                      providers={providers}
+                      providers={ed.kind === 'numerique' ? providers : providers.filter(providerSupportsShipping)}
                       priceLabel={priceLabel(ed)}
+                      xofLabel={ed.kind === 'numerique' ? formatXof(ed.amount) : undefined}
                       note={ed.kind === 'numerique' ? 'PDF envoyé immédiatement par email' : book.shop?.deliveryNote}
                     />
                   )}

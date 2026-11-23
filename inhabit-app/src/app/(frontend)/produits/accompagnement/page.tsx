@@ -4,7 +4,7 @@ import { ProductsNav } from '@/components/ProductsNav'
 import { RichText } from '@/components/RichText'
 import { computeMonths } from '@/lib/availability'
 import { getPayloadClient } from '@/lib/payload'
-import { enabledProviders, formatEuros } from '@/lib/payments/config'
+import { enabledProviders, formatEuros, formatXof } from '@/lib/payments/config'
 import { activeBookingWhere } from '@/lib/payments/orders'
 
 export const metadata: Metadata = {
@@ -81,6 +81,7 @@ export default async function CoachingPage() {
               months={months}
               providers={coaching.amount && coaching.amount > 0 ? enabledProviders() : []}
               priceLabel={formatEuros(coaching.amount)}
+              xofLabel={formatXof(coaching.amount)}
             />
           </div>
         </div>

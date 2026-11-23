@@ -1,7 +1,17 @@
 import type { Where } from 'payload'
 import type { Order } from '@/payload-types'
 import { getPayloadClient, mediaUrl } from '@/lib/payload'
-import { DOWNLOAD_DAYS, HOLD_MINUTES, newReference, newSecret, type Provider, siteUrl } from './config'
+import {
+  DOWNLOAD_DAYS,
+  HOLD_MINUTES,
+  newReference,
+  newSecret,
+  type Provider,
+  providerLabel,
+  providerSupportsShipping,
+  siteUrl,
+} from './config'
+import { createFedaPayCheckout } from './fedapay'
 import { createPayPalOrder } from './paypal'
 import { createStripeCheckout } from './stripe'
 
@@ -19,6 +29,7 @@ export type CheckoutInput = {
   shippingCountries: string[]
   deliveryNote?: string | null
   customerEmail?: string
+  customerName?: string
   imageUrl?: string
 }
 
@@ -75,6 +86,9 @@ type StartArgs = {
  * Renvoie l'adresse vers laquelle envoyer le client.
  */
 export async function startCheckout(args: StartArgs): Promise<string> {
+  if (args.product === 'livre-papier' && !providerSupportsShipping(args.provider)) {
+    throw new CheckoutError('Ce moyen de paiement n’est pas disponible pour le livre papier (adresse de livraison).')
+  }
   const payload = await getPayloadClient()
   const shippingFee = args.product === 'livre-papier' ? (args.shippingFee ?? 0) : 0
   const order = await payload.create({
@@ -109,11 +123,17 @@ export async function startCheckout(args: StartArgs): Promise<string> {
     shippingCountries: args.shippingCountries ?? [],
     deliveryNote: args.deliveryNote,
     customerEmail: args.customer?.email,
+    customerName: args.customer?.name,
     imageUrl: args.imageUrl,
   }
 
   try {
-    const session = args.provider === 'stripe' ? await createStripeCheckout(input) : await createPayPalOrder(input)
+    const session =
+      args.provider === 'stripe'
+        ? await createStripeCheckout(input)
+        : args.provider === 'paypal'
+          ? await createPayPalOrder(input)
+          : await createFedaPayCheckout(input)
     await payload.update({
       collection: 'orders',
       id: order.id,
@@ -178,7 +198,9 @@ export async function markOrderPaid(order: Order, details: PaidDetails) {
       collection: 'orders',
       id: order.id,
       overrideAccess: true,
-      data: { note: `Montant reçu (${details.amountPaid} €) inférieur au prix (${order.amount} €) : à vérifier dans Stripe / PayPal.` },
+      data: {
+        note: `Montant reçu (${details.amountPaid.toFixed(2)} €) inférieur au prix (${order.amount} €) : à vérifier chez ${providerLabel(order.provider)}.`,
+      },
     })
     return order
   }

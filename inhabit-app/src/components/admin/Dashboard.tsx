@@ -4,7 +4,7 @@ import type { About, Coaching, Media } from '@/payload-types'
 import { computeMonths } from '@/lib/availability'
 import { formatMonthFr, toISODate, toISOMonth } from '@/lib/dates'
 import { CONTACT_REASONS } from '@/lib/constants'
-import { HOLD_MINUTES } from '@/lib/payments/config'
+import { HOLD_MINUTES, providerLabel } from '@/lib/payments/config'
 import { DashboardClient, type DashData, type Req } from './DashboardClient'
 
 /* Tableau de bord de l'admin : chiffres clés, graphiques et demandes reçues. */
@@ -186,7 +186,7 @@ export async function Dashboard({ payload, user }: Props) {
       tiles: [
         { label: 'Article', value: d.label },
         { label: 'Montant', value: `${d.amount} €` },
-        { label: 'Paiement', value: d.provider === 'paypal' ? 'PayPal' : 'Carte (Stripe)' },
+        { label: 'Paiement', value: providerLabel(d.provider) },
       ],
       text: paper ? `À expédier à : ${d.shipping?.name ? `${d.shipping.name}, ` : ''}${address || 'adresse non communiquée'}` : null,
       footer: [
