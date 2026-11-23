@@ -62,7 +62,8 @@ export function Footer({ settings }: { settings: SiteSetting }) {
         </div>
 
         <p className="footer-word" aria-hidden="true">
-          In<em>Habit</em>
+          <span className="footer-in">In</span>
+          <em>Habit</em>
         </p>
 
         <div className="footer-bottom">

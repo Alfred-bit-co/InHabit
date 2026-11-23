@@ -132,7 +132,7 @@ async function seed() {
         'InHabit_Archi explore chaque semaine l’architecture, la ville et la pensée spatiale à travers des vidéos courtes et accessibles — entre l’Afrique et le reste du monde. Le site prolonge la chaîne : projets, recherches, livre, concours et accompagnement.',
       stats: [
         { value: '31K+', label: 'vues sur la vidéo la plus regardée' },
-        { value: '20+', label: 'architectes interrogés dans CONCEPT' },
+        { value: '+120', label: 'architectes interrogés dans CONCEPT' },
         { value: '4', label: 'pays de projets' },
       ],
     },
@@ -166,7 +166,7 @@ async function seed() {
       subtitle: 'Construire une pensée architecturale',
       cover: img.conceptFr,
       pitch:
-        'Un livre pour apprendre à concevoir et à construire un concept architectural : inspiration, processus de conception, projet guidé et entretiens avec plus de 20 architectes à travers le monde.',
+        'Un livre pour apprendre à concevoir et à construire un concept architectural : inspiration, processus de conception, projet guidé et entretiens avec plus de 120 architectes à travers le monde.',
       presentation: rt(
         'CONCEPT est une exploration intime de l’architecture comme dialogue vivant entre le lieu, la mémoire, le corps et la transformation.',
         'Il s’adresse aux étudiants, aux jeunes architectes et à tous ceux qui croient que l’espace façonne ce que nous devenons.',
@@ -195,7 +195,7 @@ async function seed() {
         { name: 'Édition numérique', format: 'PDF / ePub', price: '15 €', available: false },
       ],
       excerpts: [
-        { image: img.page1!, caption: '+20 architectes à travers le monde' },
+        { image: img.page1!, caption: '+120 architectes à travers le monde' },
         { image: img.page2!, caption: 'Les murs comme mémoire' },
         { image: img.page3!, caption: 'Habiter, c’est devenir' },
       ].filter((e) => e.image),

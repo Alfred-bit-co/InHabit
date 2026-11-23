@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link'
+import { BookCover3D, type BookCover } from '@/components/BookCover3D'
 import { HeroCarousel, type HeroSlide } from '@/components/HeroCarousel'
 import { CountUp } from '@/components/motion/CountUp'
 import { SplitText } from '@/components/motion/SplitText'
@@ -16,7 +17,7 @@ export default async function HomePage() {
   const payload = await getPayloadClient()
   const settings = await getSettings()
 
-  const [home, book, coaching, rdv, news, projects, events, featuredVideo, latestSaved] = await Promise.all([
+  const [home, book, coaching, rdv, news, projects, events, featuredVideo, latestSaved, allProjects] = await Promise.all([
     payload.findGlobal({ slug: 'home', depth: 1 }),
     payload.findGlobal({ slug: 'book', depth: 1 }),
     payload.findGlobal({ slug: 'coaching', depth: 0 }),
@@ -31,6 +32,14 @@ export default async function HomePage() {
     }),
     payload.find({ collection: 'videos', where: { featured: { equals: true } }, sort: '-publishedAt', limit: 1 }),
     payload.find({ collection: 'videos', sort: '-publishedAt', limit: 1 }),
+    payload.find({
+      collection: 'projects',
+      where: { published: { equals: true } },
+      limit: 500,
+      depth: 0,
+      pagination: false,
+      select: { country: true, countryOther: true },
+    }),
   ])
 
   // Vidéo mise en avant : choix manuel > dernière vidéo de la chaîne > dernière vidéo enregistrée
@@ -70,6 +79,24 @@ export default async function HomePage() {
     : projects.docs.filter((p) => isMedia(p.cover)).slice(0, 5).map(projectItem)
   const featured = projects.docs.filter((p) => p.featured).slice(0, 3)
   const bento = featured.length >= 3 ? featured : projects.docs.slice(0, 3)
+  const projectCount = allProjects.docs.length
+  const countryCount = new Set(
+    allProjects.docs.map((p) => countryName(p.country, p.countryOther)).filter(Boolean),
+  ).size
+
+  // Couvertures du livre : une par édition (FR, EN…), qui se remplacent en boucle.
+  const bookCovers: BookCover[] = []
+  for (const e of book.editions ?? []) {
+    const src = isMedia(e.cover) ? mediaUrl(e.cover, 'large') : null
+    if (src && !bookCovers.some((c) => c.src === src))
+      bookCovers.push({ src, alt: mediaAlt(e.cover, `Livre ${book.title || 'CONCEPT'} — ${e.name}`), label: e.name })
+  }
+  if (!bookCovers.length && isMedia(book.cover))
+    bookCovers.push({
+      src: mediaUrl(book.cover, 'large') ?? '',
+      alt: mediaAlt(book.cover, 'Livre CONCEPT'),
+      label: book.title || 'CONCEPT',
+    })
 
   const updates = [
     ...news.docs.map((n) => ({
@@ -189,6 +216,10 @@ export default async function HomePage() {
                 <h2>
                   Des lieux pensés pour être <em>habités</em>.
                 </h2>
+                <p>
+                  Habitat, équipements, concours : chaque projet part de son contexte, de son climat et de ceux qui
+                  l’habiteront.
+                </p>
               </div>
               <Link href="/projets" className="link-arrow">
                 Tous les projets
@@ -212,9 +243,34 @@ export default async function HomePage() {
                         .join(' · ')}
                     </span>
                     <h3>{p.title}</h3>
+                    {i === 0 && p.summary && <p>{p.summary}</p>}
                   </div>
+                  <i className="bento-go" aria-hidden="true">
+                    →
+                  </i>
                 </Link>
               ))}
+              <Link
+                href="/projets"
+                className="bento-item bento-card"
+                data-reveal
+                style={{ ['--d' as string]: `${bento.length * 0.15}s` }}
+              >
+                <span className="bento-card-label">Portfolio</span>
+                <span className="bento-figures">
+                  <span>
+                    <strong>{projectCount}</strong> projet{projectCount > 1 ? 's' : ''}
+                  </span>
+                  {countryCount > 0 && (
+                    <span>
+                      <strong>{countryCount}</strong> pays
+                    </span>
+                  )}
+                </span>
+                <span className="bento-card-cta">
+                  Explorer la carte des projets <i aria-hidden="true">→</i>
+                </span>
+              </Link>
             </div>
           </div>
         </section>
@@ -253,11 +309,7 @@ export default async function HomePage() {
       <section className="section section-sand">
         <div className="container split">
           <div className="book-stage" data-reveal>
-            {isMedia(book.cover) && (
-              <div className="book-3d">
-                <img src={mediaUrl(book.cover, 'large') ?? ''} alt={mediaAlt(book.cover, 'Livre CONCEPT')} />
-              </div>
-            )}
+            <BookCover3D covers={bookCovers} />
           </div>
           <div data-reveal style={{ ['--d' as string]: '0.15s' }}>
             <span className="eyebrow">Le livre</span>
@@ -310,7 +362,7 @@ export default async function HomePage() {
             <div className="service" data-reveal>
               <span className="num">01 — Publication</span>
               <h3>Livre {book.title || 'CONCEPT'}</h3>
-              <p>Apprendre à concevoir un concept architectural, avec plus de 20 architectes à travers le monde.</p>
+              <p>Apprendre à concevoir un concept architectural, avec plus de 120 architectes à travers le monde.</p>
               <Link href="/produits/livre-concept" className="btn btn-ghost btn-sm">
                 Découvrir
               </Link>

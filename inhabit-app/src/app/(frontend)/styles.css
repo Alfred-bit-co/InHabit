@@ -1278,7 +1278,7 @@ a.card:hover .card-media img {
 .bento {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  grid-auto-rows: clamp(220px, 24vw, 340px);
+  grid-auto-rows: clamp(170px, 16vw, 236px);
   gap: clamp(12px, 1.6vw, 20px);
 }
 .bento-item {
@@ -1289,14 +1289,15 @@ a.card:hover .card-media img {
   grid-column: span 4;
 }
 .bento-item:nth-child(1) {
-  grid-column: span 7;
+  grid-column: span 6;
   grid-row: span 2;
 }
 .bento-item:nth-child(2) {
-  grid-column: span 5;
+  grid-column: span 6;
 }
-.bento-item:nth-child(3) {
-  grid-column: span 5;
+.bento-item:nth-child(3),
+.bento-item.bento-card {
+  grid-column: span 3;
 }
 .bento-item img {
   position: absolute;
@@ -1328,13 +1329,118 @@ a.card:hover .card-media img {
   opacity: 0.85;
 }
 .bento-info h3 {
-  font-size: clamp(1.4rem, 2.4vw, 2.2rem);
+  font-size: clamp(1.3rem, 2vw, 1.9rem);
   margin: 4px 0 0;
+}
+.bento-item:nth-child(3) .bento-info h3 {
+  font-size: clamp(1.15rem, 1.5vw, 1.4rem);
+}
+.bento-info p {
+  margin: 10px 0 0;
+  max-width: 46ch;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.82);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.bento-go {
+  position: absolute;
+  z-index: 1;
+  top: clamp(14px, 1.6vw, 20px);
+  right: clamp(14px, 1.6vw, 20px);
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-style: normal;
+  color: #fff;
+  background: rgba(20, 16, 12, 0.32);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  transform: rotate(-45deg);
+  transition:
+    transform 0.6s var(--ease),
+    background 0.4s var(--ease),
+    color 0.4s var(--ease);
+}
+.bento-item:hover .bento-go {
+  transform: rotate(0deg);
+  background: #fff;
+  color: var(--ink);
+}
+/* Tuile « Portfolio » : chiffres et accès à la carte */
+.bento-item.bento-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  padding: clamp(18px, 2vw, 26px);
+  background: var(--accent);
+  color: #fff;
+  transition: background 0.5s var(--ease);
+}
+.bento-item:first-child::after {
+  background: linear-gradient(to top, rgba(20, 16, 12, 0.72), rgba(20, 16, 12, 0.18) 45%, transparent 65%);
+}
+.bento-item.bento-card::after {
+  display: none;
+}
+.bento-item.bento-card:hover {
+  background: #8e4620;
+}
+.bento-card-label {
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.bento-figures {
+  display: flex;
+  gap: clamp(16px, 2vw, 28px);
+  flex-wrap: wrap;
+  font-size: 0.95rem;
+  color: #f5dccd;
+}
+.bento-figures span {
+  display: flex;
+  flex-direction: column;
+}
+.bento-figures strong {
+  font-size: clamp(2.2rem, 3.6vw, 3.2rem);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: #fff;
+}
+.bento-card-cta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+.bento-card-cta i {
+  font-style: normal;
+  transition: transform 0.5s var(--ease);
+}
+.bento-card:hover .bento-card-cta i {
+  transform: translateX(4px);
 }
 @media (max-width: 800px) {
   .bento {
     grid-template-columns: 1fr;
-    grid-auto-rows: 300px;
+    grid-auto-rows: 280px;
+  }
+  .bento-item.bento-card {
+    min-height: 220px;
   }
   .bento-item,
   .bento-item:nth-child(n) {
@@ -1597,6 +1703,11 @@ a.card:hover .card-media img {
 .book-stage:hover .book-3d {
   transform: rotateY(-8deg) rotateX(2deg);
 }
+.book-stage-inner {
+  display: grid;
+  justify-items: center;
+  gap: clamp(28px, 3.5vw, 44px);
+}
 .book-3d img {
   position: absolute;
   inset: 0;
@@ -1607,6 +1718,46 @@ a.card:hover .card-media img {
   box-shadow:
     inset 6px 0 10px rgba(255, 255, 255, 0.12),
     30px 40px 60px -20px rgba(31, 26, 21, 0.55);
+}
+/* Plusieurs couvertures empilées : la première reste dessous (avec l'ombre),
+   les suivantes apparaissent par-dessus en fondu quand elles sont actives. */
+.book-3d img + img {
+  opacity: 0;
+  box-shadow: inset 6px 0 10px rgba(255, 255, 255, 0.12);
+  transition: opacity 1.1s var(--ease);
+}
+.book-3d img + img.is-active {
+  opacity: 1;
+}
+.book-editions {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.book-editions button {
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 0.4s var(--ease),
+    color 0.4s var(--ease);
+}
+.book-editions button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--paper);
+}
+@media (prefers-reduced-motion: reduce) {
+  .book-3d img + img {
+    transition: none;
+  }
 }
 .book-3d::before {
   content: '';
@@ -2379,12 +2530,19 @@ a.card:hover .card-media img {
   margin: clamp(32px, 4.5vw, 60px) 0 0;
   font-size: clamp(5rem, 22vw, 22rem);
   line-height: 0.78;
-  font-weight: 600;
-  letter-spacing: -0.07em;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(250, 247, 242, 0.18);
+  font-weight: 700;
+  letter-spacing: -0.04em;
   white-space: nowrap;
   user-select: none;
+}
+/* « In » évidé : la police est variable, ses tracés se chevauchent et un simple contour
+   laisse voir des lignes à l'intérieur du « n ». On peint le contour (2× plus épais) puis
+   on le recouvre avec un remplissage couleur du fond : il ne reste que le contour extérieur, net. */
+.footer-word .footer-in {
+  color: var(--footer-bg);
+  -webkit-text-stroke: 3px rgba(250, 247, 242, 0.42);
+  paint-order: stroke fill;
+  margin-right: 0.02em;
 }
 .footer-word em {
   font-family: var(--serif);
