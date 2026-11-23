@@ -1273,7 +1273,7 @@ export interface Book {
           | null;
         available?: boolean | null;
         /**
-         * Affiche les boutons « Carte bancaire » et « PayPal » sous cette édition.
+         * Affiche les boutons de paiement (carte, PayPal, Mobile Money pour le PDF) sous cette édition.
          */
         sellOnline?: boolean | null;
         kind?: ('papier' | 'numerique') | null;
@@ -1320,7 +1320,7 @@ export interface Coaching {
   price?: string | null;
   durationWeeks?: number | null;
   /**
-   * Montant encaissé à la réservation (carte bancaire ou PayPal). Laissez vide pour garder la réservation sans paiement.
+   * Montant encaissé à la réservation (carte, PayPal ou Mobile Money). Laissez vide pour garder la réservation sans paiement.
    */
   amount?: number | null;
   description?: {

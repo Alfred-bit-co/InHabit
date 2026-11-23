@@ -115,7 +115,7 @@ export const Orders: CollectionConfig = {
       Description: {
         path: '/components/admin/Description#Description',
         clientProps: {
-          text: 'Les achats payés sur le site (livre et accompagnement). Livre papier : expédiez-le, puis passez la commande en « Expédiée » pour prévenir le client. Les remboursements se font depuis Stripe ou PayPal.',
+          text: 'Les achats payés sur le site (livre et accompagnement). Livre papier : expédiez-le, puis passez la commande en « Expédiée » pour prévenir le client. Les remboursements se font depuis Stripe, PayPal ou FedaPay.',
         },
       },
     },

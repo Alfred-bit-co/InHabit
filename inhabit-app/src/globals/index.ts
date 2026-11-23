@@ -290,7 +290,7 @@ export const Book: GlobalConfig = {
         { name: 'available', type: 'checkbox', label: 'Disponible', defaultValue: true },
         {
           type: 'collapsible',
-          label: 'Vente en ligne (carte bancaire / PayPal)',
+          label: 'Vente en ligne (carte, PayPal, Mobile Money)',
           admin: { initCollapsed: false },
           fields: [
             {
@@ -301,7 +301,7 @@ export const Book: GlobalConfig = {
                   type: 'checkbox',
                   label: 'Payer directement sur le site',
                   defaultValue: false,
-                  admin: { description: 'Affiche les boutons « Carte bancaire » et « PayPal » sous cette édition.' },
+                  admin: { description: 'Affiche les boutons de paiement (carte, PayPal, Mobile Money pour le PDF) sous cette édition.' },
                 },
                 {
                   name: 'kind',
@@ -412,7 +412,7 @@ export const Coaching: GlobalConfig = {
           admin: {
             step: 0.01,
             description:
-              'Montant encaissé à la réservation (carte bancaire ou PayPal). Laissez vide pour garder la réservation sans paiement.',
+              'Montant encaissé à la réservation (carte, PayPal ou Mobile Money). Laissez vide pour garder la réservation sans paiement.',
           },
         },
       ],
