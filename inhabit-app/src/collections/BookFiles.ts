@@ -23,7 +23,7 @@ export const BookFiles: CollectionConfig = {
       Description: {
         path: '/components/admin/Description#Description',
         clientProps: {
-          text: 'Téléversez ici le livre en PDF. « Livre complet » n’est lisible que par les lecteurs ayant payé ; « Extrait » par tous les inscrits. Le fichier n’est jamais téléchargeable : il s’affiche seulement dans l’espace membre, avec le nom du lecteur en filigrane.',
+          text: 'Téléversez ici le livre en PDF. « Livre complet » n’est lisible que par les lecteurs ayant payé ; « Extrait » par tous les inscrits. Le fichier n’est jamais téléchargeable : il s’affiche seulement dans l’espace membre, avec le nom du lecteur en filigrane. Taille maximale : 50 Mo (au-delà, compressez le PDF avant de l’envoyer).',
         },
       },
     },
