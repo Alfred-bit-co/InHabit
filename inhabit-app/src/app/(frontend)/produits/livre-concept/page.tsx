@@ -1,15 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { PayButton } from '@/components/payments/PayButton'
 import { PayNotice } from '@/components/payments/PayNotice'
 import { ProductsNav } from '@/components/ProductsNav'
 import { RichText } from '@/components/RichText'
-import { getMember } from '@/lib/member'
 import { getPayloadClient, isMedia, mediaAlt, mediaUrl } from '@/lib/payload'
+import { checkoutPath, isCardPayable } from '@/lib/payments/editions'
 import { formatMoney } from '@/lib/payments/money'
 import { paymentsEnabled } from '@/lib/payments/provider'
-import { payBookEdition } from '../../paiement/actions'
 
 export async function generateMetadata(): Promise<Metadata> {
   const payload = await getPayloadClient()
@@ -20,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function BookPage({ searchParams }: { searchParams: Promise<{ paiement?: string }> }) {
   const { paiement } = await searchParams
   const payload = await getPayloadClient()
-  const [book, member] = await Promise.all([payload.findGlobal({ slug: 'book', depth: 1 }), getMember()])
+  const book = await payload.findGlobal({ slug: 'book', depth: 1 })
   const editions = book.editions ?? []
   const cardPayments = paymentsEnabled()
   const excerpts = (book.excerpts ?? []).filter((e) => isMedia(e.image))
@@ -103,17 +101,18 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
             </div>
           </div>
           <PayNotice status={paiement} />
-          {cardPayments && !member && editions.some((ed) => ed.payByCard) && (
-            <p className="form-note" style={{ margin: '0 0 20px' }}>
-              Pour payer par carte,{' '}
-              <Link href="/espace-membre/connexion?suite=%2Fproduits%2Flivre-concept%23editions">connectez-vous</Link> ou créez
-              votre compte (email ou Google). L’espace membre et la lecture s’ouvrent dès le paiement confirmé.
-            </p>
-          )}
           {editions.length ? (
             <div className="grid grid-3">
-              {editions.map((ed) => (
-                <div key={ed.id} className="edition">
+              {editions.map((ed) => {
+                const buy = cardPayments && isCardPayable(ed) && ed.id ? checkoutPath(ed.id) : null
+                // Édition numérique : toute la carte mène à la commande (compte, paiement, espace membre)
+                const wholeCard = Boolean(buy && ed.digitalAccess)
+                return (
+                <div key={ed.id} className={`edition${wholeCard ? ' edition-buyable' : ''}`}>
+                  {wholeCard && buy && (
+                    // Toute la carte est cliquable ; le vrai bouton ci-dessous reste le lien accessible
+                    <Link href={buy} className="edition-overlay" aria-hidden="true" tabIndex={-1} />
+                  )}
                   {isMedia(ed.cover) && (
                     <img
                       src={mediaUrl(ed.cover, 'card') ?? ''}
@@ -136,13 +135,14 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
                       <span className="tag tag-neutral">Bientôt disponible</span>
                     ) : (
                       <>
-                        {cardPayments && ed.payByCard && !!ed.priceAmount && ed.id && (
-                          <form action={payBookEdition}>
-                            <input type="hidden" name="edition" value={ed.id} />
-                            <PayButton>
-                              <CardIcon /> Payer par carte
-                            </PayButton>
-                          </form>
+                        {buy && (
+                          <Link
+                            href={buy}
+                            className="btn btn-accent btn-sm"
+                            aria-label={`Commander ${ed.name} et payer par carte`}
+                          >
+                            <CardIcon /> {ed.digitalAccess ? 'Acheter et lire en ligne' : 'Payer par carte'}
+                          </Link>
                         )}
                         {(ed.links ?? []).map((l) => (
                           <a key={l.id} href={l.url} className="btn btn-beige btn-sm" target="_blank" rel="noopener noreferrer">
@@ -153,7 +153,8 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
                     )}
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <p className="empty">Les éditions seront bientôt annoncées.</p>

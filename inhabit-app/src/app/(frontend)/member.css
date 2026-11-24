@@ -1104,6 +1104,301 @@
   display: contents;
 }
 
+/* Édition numérique : toute la carte mène à la commande */
+.edition-buyable {
+  position: relative;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+.edition-buyable:hover {
+  box-shadow:
+    0 0 0 1px var(--accent),
+    var(--shadow);
+  transform: translateY(-2px);
+}
+.edition-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+.edition-buyable .links {
+  position: relative;
+  z-index: 2;
+}
+
+/* ───────────── Page de commande ───────────── */
+
+.checkout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+  gap: clamp(20px, 3vw, 40px);
+  align-items: start;
+  margin-top: 18px;
+}
+.checkout-title {
+  font-size: clamp(2rem, 4.4vw, 3.2rem);
+  margin: 6px 0 18px;
+}
+.checkout-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+}
+.checkout-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 7px 7px;
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.checkout-steps li span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--paper);
+  font-size: 0.78rem;
+}
+.checkout-steps li.is-current {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.checkout-steps li.is-current span {
+  background: var(--accent);
+  color: #fff;
+}
+.checkout-steps li.is-done {
+  color: var(--ok-fg);
+}
+.checkout-block {
+  padding: clamp(18px, 2.4vw, 28px);
+  border-radius: 24px;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.checkout-block + .checkout-block {
+  margin-top: 14px;
+}
+.checkout-block.is-locked {
+  opacity: 0.6;
+}
+.checkout-block-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+}
+.checkout-num {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: var(--solid);
+  color: var(--on-solid);
+  font-size: 0.85rem;
+}
+.checkout-account {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.checkout-account > div {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.checkout-account .muted {
+  overflow-wrap: anywhere;
+}
+.checkout-avatar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+.checkout-auth {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.checkout-pay {
+  display: grid;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  gap: clamp(16px, 2.4vw, 28px);
+  align-items: center;
+}
+.checkout-pay-side {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+}
+.checkout-pay-btn {
+  gap: 8px;
+}
+.checkout-pay-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* Carte bancaire décorative (aucune saisie : la carte se tape chez Stripe) */
+.pay-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 10px;
+  aspect-ratio: 1.586;
+  padding: 20px 22px;
+  border-radius: 18px;
+  overflow: hidden;
+  color: #faf7f2;
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(255, 255, 255, 0.22) 0%, transparent 55%),
+    linear-gradient(140deg, #c0693a 0%, #a45428 45%, #5c2d14 100%);
+  box-shadow: 0 22px 40px -22px rgba(92, 45, 20, 0.85);
+}
+.pay-card::after {
+  content: '';
+  position: absolute;
+  right: -40px;
+  bottom: -60px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 28px solid rgba(255, 255, 255, 0.08);
+}
+.pay-card-brand {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.pay-card-chip {
+  align-self: center;
+  width: 42px;
+  height: 31px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #f1d9a4 0%, #c9a463 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+.pay-card-number {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: clamp(0.95rem, 2.4vw, 1.15rem);
+  letter-spacing: 0.12em;
+}
+.pay-card-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+}
+.pay-card-foot span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Récapitulatif */
+.checkout-summary {
+  position: sticky;
+  top: 100px;
+  display: grid;
+  gap: 6px;
+  padding: 22px;
+  border-radius: 24px;
+  background: var(--paper);
+  box-shadow:
+    0 0 0 1px var(--line),
+    var(--shadow);
+}
+.checkout-cover {
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 0 auto 10px;
+}
+.checkout-summary-name {
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+}
+.checkout-included {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 4px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.92rem;
+}
+.checkout-included li {
+  display: flex;
+  gap: 8px;
+}
+.checkout-included li::before {
+  content: '✓';
+  color: var(--accent);
+  font-weight: 700;
+}
+.checkout-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.checkout-total strong {
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+@media (max-width: 900px) {
+  .checkout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* Le récapitulatif passe en premier sur téléphone */
+  .checkout-summary {
+    position: static;
+    order: -1;
+  }
+  .checkout-cover {
+    max-width: 140px;
+  }
+}
+@media (max-width: 620px) {
+  .checkout-pay {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pay-card {
+    max-width: 320px;
+  }
+  .checkout-auth .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* Lien « Mon espace » dans l'en-tête */
 .header-account {
   display: grid;

@@ -53,8 +53,8 @@ export default async function ThanksPage({ searchParams }: { searchParams: Promi
               )}
               <div className="pay-result-actions">
                 {opensReading ? (
-                  <Link href={member ? '/espace-membre/lecture' : '/espace-membre/connexion'} className="btn btn-accent">
-                    Commencer la lecture <span className="arrow">→</span>
+                  <Link href={member ? '/espace-membre' : '/espace-membre/connexion'} className="btn btn-accent">
+                    Accéder à mon espace membre <span className="arrow">→</span>
                   </Link>
                 ) : (
                   <Link href="/" className="btn btn-dark">

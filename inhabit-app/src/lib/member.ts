@@ -44,10 +44,13 @@ export async function getSubscriber(): Promise<Member | null> {
   return member && hasBookAccess(member) ? member : null
 }
 
-/** N'accepte qu'un chemin interne pour la redirection après connexion. */
+/**
+ * N'accepte qu'un chemin interne pour la redirection après connexion.
+ * Refuse « //site » et « /\site » (lus comme une autre adresse par les navigateurs) et les caractères de contrôle.
+ */
 export const safeNext = (value: unknown, fallback = '/espace-membre') => {
   const v = String(value ?? '')
-  return v.startsWith('/') && !v.startsWith('//') ? v : fallback
+  return v.startsWith('/') && !v.startsWith('//') && !/[\\\u0000-\u001f]/.test(v) ? v : fallback
 }
 
 export const firstName = (m: Pick<Member, 'name' | 'email'>) =>
