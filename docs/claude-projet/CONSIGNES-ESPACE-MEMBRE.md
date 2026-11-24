@@ -35,7 +35,7 @@ Dans Supabase, projet **`inhabit`** (réf. `fakvtocxtvnhxefjdogx`). Ne touche ja
 1. Menu de gauche : **Storage**, puis **New bucket**.
 2. Nom : **`livres`**.
 3. **Public bucket : désactivé.** C'est le point essentiel : le PDF ne doit jamais avoir d'adresse publique.
-4. **Restrict file size :** activé, **200 MB**.
+4. **Restrict file size :** activé, **50 MB**. C'est le maximum de l'offre gratuite de Supabase. Au-delà, le PDF doit être compressé, ou le projet passer à l'offre Pro.
 5. **Restrict MIME types :** `application/pdf`.
 6. **Create bucket**.
 7. N'ajoute **aucune policy** sur ce bucket. Le site y accède avec les clés S3 serveur, qui existent déjà. Personne d'autre ne doit pouvoir le lire.

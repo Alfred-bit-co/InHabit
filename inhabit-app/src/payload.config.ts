@@ -22,7 +22,7 @@ import { Publications } from './collections/Publications'
 import { Appointments, CoachingBookings, ContactMessages, TopicSuggestions } from './collections/Requests'
 import { Users } from './collections/Users'
 import { Videos, VideoThemes } from './collections/Videos'
-import { privateBucket, s3ClientConfig, s3Enabled } from './lib/s3'
+import { MAX_UPLOAD_BYTES, privateBucket, s3ClientConfig, s3Enabled } from './lib/s3'
 import { AboutPage, AppointmentSettings, Book, Coaching, HomePage, SiteSettings, YoutubePage } from './globals'
 
 const filename = fileURLToPath(import.meta.url)
@@ -180,5 +180,7 @@ export default buildConfig({
   db,
   email,
   sharp,
+  // Refus clair au-delà de 50 Mo (au lieu d'une erreur obscure du stockage), images comme PDF
+  upload: { limits: { fileSize: MAX_UPLOAD_BYTES } },
   plugins: [storage, privateStorage],
 })

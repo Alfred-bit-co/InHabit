@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { getMember } from '@/lib/member'
 import { getPayloadClient, mediaUrl } from '@/lib/payload'
+import { checkoutPath, isCardPayable } from '@/lib/payments/editions'
 import { isCurrency } from '@/lib/payments/money'
 import { newOrderReference } from '@/lib/payments/orders'
 import { getPaymentProvider, siteUrl } from '@/lib/payments/provider'
@@ -16,29 +17,29 @@ const SUCCESS = () => `${siteUrl()}/paiement/merci?session_id={CHECKOUT_SESSION_
  */
 export async function payBookEdition(fd: FormData) {
   const editionId = String(fd.get('edition') ?? '')
-  // Page de retour (liste fermée : jamais une adresse fournie par le navigateur)
-  const back = fd.get('from') === 'abonnement' ? '/espace-membre/abonnement' : '/produits/livre-concept'
-  const backTo = (status: string) => (back === '/produits/livre-concept' ? `${back}?paiement=${status}#editions` : `${back}?paiement=${status}`)
   const provider = getPaymentProvider()
-  if (!provider || !editionId) redirect(backTo('indisponible'))
-
   const payload = await getPayloadClient()
   const book = await payload.findGlobal({ slug: 'book', depth: 1 })
   const edition = (book.editions ?? []).find((e) => e.id === editionId)
-  if (
-    !edition ||
-    edition.available === false ||
-    !edition.payByCard ||
-    !edition.priceAmount ||
-    edition.priceAmount <= 0 ||
-    !isCurrency(edition.currency)
-  ) {
+
+  // Page de retour (liste fermée : jamais une adresse fournie par le navigateur).
+  // La page de commande n'est utilisée que pour une édition existante.
+  const from = fd.get('from')
+  const backTo = (status: string) =>
+    from === 'abonnement'
+      ? `/espace-membre/abonnement?paiement=${status}`
+      : from === 'commande' && edition?.id
+        ? `${checkoutPath(edition.id)}&paiement=${status}`
+        : `/produits/livre-concept?paiement=${status}#editions`
+  const loginBack = from === 'abonnement' ? '/espace-membre/abonnement' : edition?.id ? checkoutPath(edition.id) : '/produits/livre-concept#editions'
+
+  if (!provider || !edition || !isCardPayable(edition) || !edition.priceAmount || !isCurrency(edition.currency)) {
     redirect(backTo('indisponible'))
   }
 
   // Tout achat se fait connecté : chaque paiement est rattaché à un compte (traçabilité)
   const member = await getMember()
-  if (!member) redirect(`/espace-membre/connexion?suite=${encodeURIComponent(back === '/produits/livre-concept' ? `${back}#editions` : back)}`)
+  if (!member) redirect(`/espace-membre/connexion?suite=${encodeURIComponent(loginBack)}`)
   // Déjà lecteur à vie : inutile de payer deux fois la version numérique
   if (edition.digitalAccess && !edition.requiresShipping && !edition.accessDays && member.bookAccess && !member.bookAccessUntil) {
     redirect('/espace-membre')
