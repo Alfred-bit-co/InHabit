@@ -8,13 +8,12 @@ export type ChapterItem = {
   number: number
   title: string
   part?: string | null
-  free: boolean
   readable: boolean
 }
 
 /**
  * Sommaire du livre (titres uniquement, jamais le texte) avec, pour chaque chapitre,
- * l'indication « lisible par ce membre ».
+ * l'indication « lisible par ce membre » (abonné uniquement).
  */
 export const getChapterList = cache(async (member: Pick<Member, 'bookAccess' | 'bookAccessUntil'> | null): Promise<ChapterItem[]> => {
   const payload = await getPayloadClient()
@@ -25,7 +24,7 @@ export const getChapterList = cache(async (member: Pick<Member, 'bookAccess' | '
     limit: 500,
     pagination: false,
     depth: 0,
-    select: { number: true, title: true, part: true, free: true },
+    select: { number: true, title: true, part: true },
   })
   const full = hasBookAccess(member)
   return docs.map((c) => ({
@@ -33,8 +32,7 @@ export const getChapterList = cache(async (member: Pick<Member, 'bookAccess' | '
     number: c.number,
     title: c.title,
     part: c.part,
-    free: Boolean(c.free),
-    readable: full || Boolean(c.free),
+    readable: full,
   }))
 })
 

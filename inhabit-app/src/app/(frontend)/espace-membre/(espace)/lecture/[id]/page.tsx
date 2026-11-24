@@ -4,7 +4,7 @@ import { BookReader } from '@/components/member/BookReader'
 import { IconLock } from '@/components/member/icons'
 import { RichText } from '@/components/RichText'
 import { getChapterList, relId } from '@/lib/book'
-import { requireMember } from '@/lib/member'
+import { requireSubscriber } from '@/lib/member'
 import { getPayloadClient } from '@/lib/payload'
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ pos?: string }> }
@@ -14,7 +14,7 @@ export default async function ReadChapterPage({ params, searchParams }: Props) {
   const chapterId = Number(id)
   if (!Number.isInteger(chapterId)) notFound()
 
-  const member = await requireMember(`/espace-membre/lecture/${chapterId}`)
+  const member = await requireSubscriber(`/espace-membre/lecture/${chapterId}`)
   const payload = await getPayloadClient()
   const [book, chapters, chapter] = await Promise.all([
     payload.findGlobal({ slug: 'book', depth: 0 }),

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useCaptureShield } from './useCaptureShield'
 import type { PDFDocumentLoadingTask, PDFDocumentProxy, RenderTask } from 'pdfjs-dist'
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { addPdfBookmark, savePdfPage } from '@/app/(frontend)/espace-membre/actions'
@@ -12,7 +13,6 @@ type Props = {
   token: string
   scrambleKey: string
   size: number
-  isExtract: boolean
   initialPage: number
   marks: number[]
   reader: { name: string; email: string }
@@ -140,7 +140,7 @@ function Thumb({ doc, num, active, marked, onClick }: { doc: PDFDocumentProxy; n
  * - pas de téléchargement, d'impression, de clic droit ni de Ctrl+S ;
  * - filigrane au nom du lecteur dans chaque page.
  */
-export function PdfReader({ bookTitle, token, scrambleKey, size, isExtract, initialPage, marks, reader }: Props) {
+export function PdfReader({ bookTitle, token, scrambleKey, size, initialPage, marks, reader }: Props) {
   const stageRef = useRef<HTMLDivElement>(null)
   const stripRef = useRef<HTMLDivElement>(null)
   const [doc, setDoc] = useState<PDFDocumentProxy | null>(null)
@@ -148,7 +148,6 @@ export function PdfReader({ bookTitle, token, scrambleKey, size, isExtract, init
   const [box, setBox] = useState({ w: 0, h: 0, cols: 2 })
   const [page, setPage] = useState(Math.max(1, initialPage))
   const [localMarks, setLocalMarks] = useState(marks)
-  const [hidden, setHidden] = useState(false)
   const [toast, setToast] = useState('')
   const [, startTransition] = useTransition()
 
@@ -277,11 +276,24 @@ export function PdfReader({ bookTitle, token, scrambleKey, size, isExtract, init
     return () => window.removeEventListener('keydown', onKey)
   }, [go, flash])
 
-  // Contenu masqué quand l'onglet passe en arrière-plan (aperçus du sélecteur d'applications)
+  // Pages masquées dès qu'une capture peut se préparer (voir useCaptureShield)
+  const hidden = useCaptureShield(flash)
+
+  // Filigrane mobile (nom, email, heure) qui se déplace : il ne peut pas être recadré hors d'une vidéo
+  const [tag, setTag] = useState({ x: 8, y: 10, time: '' })
   useEffect(() => {
-    const onVis = () => setHidden(document.hidden)
-    document.addEventListener('visibilitychange', onVis)
-    return () => document.removeEventListener('visibilitychange', onVis)
+    const move = () =>
+      setTag({
+        x: 4 + Math.random() * 56,
+        y: 6 + Math.random() * 80,
+        time: new Date().toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }),
+      })
+    const first = window.setTimeout(move, 0)
+    const every = window.setInterval(move, 6000)
+    return () => {
+      window.clearTimeout(first)
+      window.clearInterval(every)
+    }
   }, [])
 
   // Glissement au doigt
@@ -319,7 +331,7 @@ export function PdfReader({ bookTitle, token, scrambleKey, size, isExtract, init
           <span className="reader-sep" aria-hidden="true">
             \
           </span>
-          <strong>{isExtract ? 'Extrait offert' : 'Édition numérique'}</strong>
+          <strong>Édition numérique</strong>
         </p>
         <div className="reader-tools">
           <button
@@ -339,13 +351,6 @@ export function PdfReader({ bookTitle, token, scrambleKey, size, isExtract, init
           </span>
         </div>
       </header>
-
-      {isExtract && (
-        <p className="pdf-extract-banner">
-          Vous lisez l’extrait offert.{' '}
-          <Link href="/produits/livre-concept#editions">Débloquer le livre complet →</Link>
-        </p>
-      )}
 
       <div className="reader-stage">
         <button type="button" className="reader-arrow prev" onClick={() => go(-1)} disabled={!doc || start <= 1} aria-label="Pages précédentes">
@@ -387,6 +392,17 @@ export function PdfReader({ bookTitle, token, scrambleKey, size, isExtract, init
               ))}
             </div>
           )}
+          {doc && tag.time && (
+            <span className="pdf-tag" aria-hidden="true" style={{ left: `${tag.x}%`, top: `${tag.y}%` }}>
+              {reader.name} · {reader.email} · {tag.time}
+            </span>
+          )}
+          {hidden && doc && (
+            <button type="button" className="pdf-shield" onClick={() => window.focus()}>
+              <strong>Lecture masquée</strong>
+              <span>Les captures et enregistrements d’écran du livre ne sont pas autorisés. Cliquez ici pour reprendre.</span>
+            </button>
+          )}
         </div>
         <button type="button" className="reader-arrow next" onClick={() => go(1)} disabled={!doc || atEnd} aria-label="Pages suivantes">
           <IconChevron dir="right" />
@@ -400,13 +416,6 @@ export function PdfReader({ bookTitle, token, scrambleKey, size, isExtract, init
               <Thumb key={n} doc={doc} num={n} active={spread.includes(n)} marked={localMarks.includes(n)} onClick={() => setPage(n)} />
             ))}
         </div>
-        {atEnd && isExtract && (
-          <div className="reader-next">
-            <Link href="/produits/livre-concept#editions" className="btn btn-accent btn-sm">
-              Lire la suite <span className="arrow">→</span>
-            </Link>
-          </div>
-        )}
       </div>
 
       {toast && (

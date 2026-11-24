@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { addBookmark, saveReadingProgress } from '@/app/(frontend)/espace-membre/actions'
 import { IconArrowLeft, IconBookmark, IconChevron, IconText } from './icons'
+import { useCaptureShield } from './useCaptureShield'
 
 type Props = {
   bookTitle: string
@@ -70,6 +71,12 @@ export function BookReader({ bookTitle, chapter, prevId, nextId, nextLocked, ini
   const [localMarks, setLocalMarks] = useState(marks)
   const [toast, setToast] = useState('')
   const [, startTransition] = useTransition()
+  const flash = useCallback((msg: string) => {
+    setToast(msg)
+    window.setTimeout(() => setToast(''), 2400)
+  }, [])
+  // Texte masqué dès qu'une capture peut se préparer
+  const hidden = useCaptureShield(flash)
 
   /** Recalcule les colonnes et le nombre de pages, en gardant la position de lecture. */
   const measure = useCallback(() => {
@@ -216,7 +223,11 @@ export function BookReader({ bookTitle, chapter, prevId, nextId, nextLocked, ini
   const atEnd = page >= pages - 1
 
   return (
-    <div className="reader">
+    <div
+      className={`reader reader-protected${hidden ? ' is-hidden' : ''}`}
+      onContextMenu={(e) => e.preventDefault()}
+      onCopy={(e) => e.preventDefault()}
+    >
       <header className="reader-head">
         <Link href="/espace-membre" className="reader-back" aria-label="Retour à ma bibliothèque">
           <IconArrowLeft />
@@ -277,6 +288,12 @@ export function BookReader({ bookTitle, chapter, prevId, nextId, nextLocked, ini
             {children}
             <span ref={endRef} className="reader-end" aria-hidden="true" />
           </div>
+          {hidden && (
+            <button type="button" className="pdf-shield" onClick={() => window.focus()}>
+              <strong>Lecture masquée</strong>
+              <span>Les captures et enregistrements d’écran du livre ne sont pas autorisés. Cliquez ici pour reprendre.</span>
+            </button>
+          )}
         </div>
         <button
           type="button"

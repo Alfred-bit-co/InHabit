@@ -2,14 +2,14 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getChapterList, relId } from '@/lib/book'
 import { getReadableBookFile } from '@/lib/bookFile'
-import { requireMember } from '@/lib/member'
+import { requireSubscriber } from '@/lib/member'
 
 /**
  * « Lire CONCEPT » : ouvre le livre PDF s'il a été téléversé,
  * sinon la version texte au dernier chapitre lu (ou au premier lisible).
  */
 export default async function ReadIndexPage() {
-  const member = await requireMember('/espace-membre/lecture')
+  const member = await requireSubscriber('/espace-membre/lecture')
   if (await getReadableBookFile(member)) redirect('/espace-membre/livre')
 
   const readable = (await getChapterList(member)).filter((c) => c.readable)

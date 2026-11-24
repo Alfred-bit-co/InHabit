@@ -1,13 +1,13 @@
 import Link from 'next/link'
 import { PdfReader } from '@/components/member/PdfReader'
 import { createReaderToken, getReadableBookFile, readerKey } from '@/lib/bookFile'
-import { firstName, requireMember } from '@/lib/member'
+import { firstName, requireSubscriber } from '@/lib/member'
 import { getPayloadClient } from '@/lib/payload'
 
 export const dynamic = 'force-dynamic'
 
 export default async function PdfBookPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
-  const member = await requireMember('/espace-membre/livre')
+  const member = await requireSubscriber('/espace-membre/livre')
   const { page } = await searchParams
   const payload = await getPayloadClient()
   const [book, file] = await Promise.all([payload.findGlobal({ slug: 'book', depth: 0 }), getReadableBookFile(member)])
@@ -41,7 +41,6 @@ export default async function PdfBookPage({ searchParams }: { searchParams: Prom
       token={token}
       scrambleKey={readerKey(token).toString('hex')}
       size={file.filesize}
-      isExtract={file.kind === 'extrait'}
       initialPage={initialPage}
       marks={marks}
       reader={{ name: member.name || firstName(member), email: member.email }}

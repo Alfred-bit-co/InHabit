@@ -1,10 +1,9 @@
 import { PasswordForm, ProfileForm } from '@/components/member/AuthForms'
-import { hasBookAccess } from '@/lib/bookAccess'
 import { formatShortDate } from '@/lib/dates'
-import { requireMember } from '@/lib/member'
+import { requireSubscriber } from '@/lib/member'
 
 export default async function ProfilePage() {
-  const member = await requireMember('/espace-membre/profil')
+  const member = await requireSubscriber('/espace-membre/profil')
   return (
     <div className="member-page">
       <header className="member-head">
@@ -20,18 +19,20 @@ export default async function ProfilePage() {
       </section>
       <section className="member-card">
         <h3>Mot de passe</h3>
+        {member.googleId && (
+          <p className="form-note" style={{ marginTop: 0 }}>
+            Vous vous connectez avec Google. Pour aussi pouvoir vous connecter par email, choisissez un mot de passe
+            avec « Mot de passe oublié » sur la page de connexion.
+          </p>
+        )}
         <PasswordForm />
       </section>
       <section className="member-card">
         <h3>Accès</h3>
         <p className="muted" style={{ margin: 0 }}>
-          {hasBookAccess(member)
-            ? member.bookAccessUntil
-              ? `Lecture complète du livre ouverte jusqu’au ${formatShortDate(member.bookAccessUntil)}.`
-              : 'Lecture complète du livre CONCEPT ouverte à vie sur ce compte.'
-            : member.bookAccess
-              ? `Votre accès a pris fin le ${formatShortDate(member.bookAccessUntil)}. Un nouvel achat le rouvre.`
-              : 'Vous avez accès aux extraits offerts. L’achat d’une édition numérique ouvre la lecture complète.'}
+          {member.bookAccessUntil
+            ? `Abonnement actif jusqu’au ${formatShortDate(member.bookAccessUntil)}. Un nouvel achat le prolonge.`
+            : 'Accès à vie à l’espace membre et au livre CONCEPT sur ce compte.'}
         </p>
       </section>
       <p className="form-note">

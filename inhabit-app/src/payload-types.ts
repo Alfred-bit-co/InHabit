@@ -453,7 +453,7 @@ export interface BookFile {
   title: string;
   kind: 'complet' | 'extrait';
   /**
-   * Si plusieurs fichiers du même type sont en ligne, le plus récent est utilisé.
+   * Si plusieurs fichiers sont en ligne, le plus récent est utilisé.
    */
   active?: boolean | null;
   prefix?: string | null;
@@ -666,6 +666,10 @@ export interface Order {
 export interface Member {
   id: number;
   name?: string | null;
+  /**
+   * Rempli automatiquement si le membre se connecte avec Google.
+   */
+  googleId?: string | null;
   bookAccess?: boolean | null;
   /**
    * Vide = accès à vie. Rempli automatiquement pour un abonnement à durée limitée.
@@ -1175,6 +1179,7 @@ export interface OrdersSelect<T extends boolean = true> {
  */
 export interface MembersSelect<T extends boolean = true> {
   name?: T;
+  googleId?: T;
   bookAccess?: T;
   bookAccessUntil?: T;
   readingChapter?: T;

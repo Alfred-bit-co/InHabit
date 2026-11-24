@@ -5,14 +5,14 @@ import { type AccessFields, hasBookAccess } from '../lib/bookAccess'
 /**
  * Qui peut lire un chapitre :
  * - administrateur : tout ;
- * - membre ayant acheté le livre numérique : tous les chapitres publiés ;
- * - tout le monde : les chapitres publiés marqués « extrait offert ».
+ * - membre abonné (accès payé et en cours) : les chapitres publiés ;
+ * - personne d'autre : ni les visiteurs, ni les inscrits qui n'ont pas payé.
  */
 const readChapters: Access = ({ req }) => {
   if (isAdminUser(req.user)) return true
   const published: Where = { published: { equals: true } }
   if (isMemberUser(req.user) && hasBookAccess(req.user as AccessFields)) return published
-  return { and: [published, { free: { equals: true } }] }
+  return false
 }
 
 export const BookChapters: CollectionConfig = {
@@ -22,13 +22,13 @@ export const BookChapters: CollectionConfig = {
   admin: {
     group: 'Mes contenus',
     useAsTitle: 'title',
-    defaultColumns: ['number', 'title', 'free', 'published'],
+    defaultColumns: ['number', 'title', 'published'],
     hideAPIURL: true,
     components: {
       Description: {
         path: '/components/admin/Description#Description',
         clientProps: {
-          text: 'Le texte du livre, chapitre par chapitre, lu par les membres dans leur espace. Cochez « Extrait offert » pour qu’un chapitre soit lisible sans achat.',
+          text: 'Le texte du livre, chapitre par chapitre, lu dans l’espace membre. Seuls les membres abonnés (paiement confirmé) peuvent le lire.',
         },
       },
     },
@@ -47,9 +47,10 @@ export const BookChapters: CollectionConfig = {
     {
       name: 'free',
       type: 'checkbox',
-      label: 'Extrait offert (lisible sans achat)',
+      label: 'Extrait offert',
       defaultValue: false,
-      admin: { position: 'sidebar' },
+      // Plus utilisé : l'espace membre est réservé aux abonnés (colonne gardée en base)
+      admin: { hidden: true },
     },
     {
       name: 'published',

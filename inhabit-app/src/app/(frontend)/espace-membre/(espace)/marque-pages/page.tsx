@@ -2,11 +2,11 @@ import Link from 'next/link'
 import { IconBookmark } from '@/components/member/icons'
 import { getChapterList, relId } from '@/lib/book'
 import { formatShortDate } from '@/lib/dates'
-import { requireMember } from '@/lib/member'
+import { requireSubscriber } from '@/lib/member'
 import { removeBookmark } from '../../actions'
 
 export default async function BookmarksPage() {
-  const member = await requireMember('/espace-membre/marque-pages')
+  const member = await requireSubscriber('/espace-membre/marque-pages')
   const chapters = new Map((await getChapterList(member)).map((c) => [c.id, c]))
   // Pages du PDF d'abord (dans l'ordre), puis chapitres de la version texte
   const marks = [...(member.bookmarks ?? [])].sort((a, b) => {

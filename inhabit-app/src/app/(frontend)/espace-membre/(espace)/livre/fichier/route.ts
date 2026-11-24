@@ -1,5 +1,5 @@
 import { canReadFile, readerKey, readFileRange, scramble, verifyReaderToken } from '@/lib/bookFile'
-import { getMember } from '@/lib/member'
+import { getSubscriber } from '@/lib/member'
 import { getPayloadClient } from '@/lib/payload'
 
 export const dynamic = 'force-dynamic'
@@ -16,8 +16,8 @@ const deny = (status: number, msg: string) =>
  * ouverture directe dans un onglet, demande sans plage d'octets ou trop grande.
  */
 export async function GET(request: Request) {
-  const member = await getMember()
-  if (!member) return deny(401, 'Connexion requise')
+  const member = await getSubscriber()
+  if (!member) return deny(401, 'Abonnement requis')
 
   // Uniquement depuis la liseuse (fetch), jamais en ouvrant l'adresse dans un onglet
   const dest = request.headers.get('sec-fetch-dest')

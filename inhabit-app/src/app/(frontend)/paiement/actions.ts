@@ -16,8 +16,11 @@ const SUCCESS = () => `${siteUrl()}/paiement/merci?session_id={CHECKOUT_SESSION_
  */
 export async function payBookEdition(fd: FormData) {
   const editionId = String(fd.get('edition') ?? '')
+  // Page de retour (liste fermée : jamais une adresse fournie par le navigateur)
+  const back = fd.get('from') === 'abonnement' ? '/espace-membre/abonnement' : '/produits/livre-concept'
+  const backTo = (status: string) => (back === '/produits/livre-concept' ? `${back}?paiement=${status}#editions` : `${back}?paiement=${status}`)
   const provider = getPaymentProvider()
-  if (!provider || !editionId) redirect('/produits/livre-concept?paiement=indisponible#editions')
+  if (!provider || !editionId) redirect(backTo('indisponible'))
 
   const payload = await getPayloadClient()
   const book = await payload.findGlobal({ slug: 'book', depth: 1 })
@@ -30,12 +33,12 @@ export async function payBookEdition(fd: FormData) {
     edition.priceAmount <= 0 ||
     !isCurrency(edition.currency)
   ) {
-    redirect(`/produits/livre-concept?paiement=indisponible#editions`)
+    redirect(backTo('indisponible'))
   }
 
   // Tout achat se fait connecté : chaque paiement est rattaché à un compte (traçabilité)
   const member = await getMember()
-  if (!member) redirect(`/espace-membre/connexion?suite=${encodeURIComponent('/produits/livre-concept#editions')}`)
+  if (!member) redirect(`/espace-membre/connexion?suite=${encodeURIComponent(back === '/produits/livre-concept' ? `${back}#editions` : back)}`)
   // Déjà lecteur à vie : inutile de payer deux fois la version numérique
   if (edition.digitalAccess && !edition.requiresShipping && !edition.accessDays && member.bookAccess && !member.bookAccessUntil) {
     redirect('/espace-membre')
@@ -78,13 +81,13 @@ export async function payBookEdition(fd: FormData) {
       email: member.email,
       collectShipping: Boolean(edition.requiresShipping),
       successUrl: SUCCESS(),
-      cancelUrl: `${siteUrl()}/produits/livre-concept?paiement=annule#editions`,
+      cancelUrl: `${siteUrl()}${backTo('annule')}`,
     })
     await payload.update({ collection: 'orders', id: order.id, data: { providerSessionId: session.sessionId }, depth: 0 })
     url = session.url
   } catch (err) {
     console.error('[paiement] livre', err)
-    redirect('/produits/livre-concept?paiement=erreur#editions')
+    redirect(backTo('erreur'))
   }
   redirect(url)
 }
