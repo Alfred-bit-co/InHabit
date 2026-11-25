@@ -13,11 +13,13 @@ import { formatShortDate } from '@/lib/dates'
 import { getPayloadClient, getSettings, isMedia, mediaAlt, mediaUrl } from '@/lib/payload'
 import { fetchChannelVideos, fromCollection, type YtVideo } from '@/lib/youtube'
 
+/** Préfixe des fichiers de public/ (vide en ligne ; « /InHabit » pour l'export statique GitHub Pages). */
+const ASSETS = process.env.NEXT_BASE_PATH || ''
+
 export default async function HomePage() {
   const payload = await getPayloadClient()
-  const settings = await getSettings()
-
-  const [home, book, coaching, rdv, news, projects, events, featuredVideo, latestSaved, allProjects] = await Promise.all([
+  const [settings, home, book, coaching, rdv, news, projects, events, featuredVideo, latestSaved, allProjects] = await Promise.all([
+    getSettings(),
     payload.findGlobal({ slug: 'home', depth: 1 }),
     payload.findGlobal({ slug: 'book', depth: 1 }),
     payload.findGlobal({ slug: 'coaching', depth: 0 }),
@@ -208,7 +210,7 @@ export default async function HomePage() {
 
       {/* ───── Projets ───── */}
       {bento.length > 0 && (
-        <section className="section section-alt">
+        <section className="section section-alt section-projets">
           <div className="container">
             <div className="section-head" data-reveal>
               <div>
@@ -224,6 +226,21 @@ export default async function HomePage() {
               <Link href="/projets" className="link-arrow">
                 Tous les projets
               </Link>
+            </div>
+            {/* Bannière de la chaîne, à ses proportions d'origine (6:1, comme une bannière YouTube) */}
+            <div className="projects-banner">
+              <figure data-reveal="clip">
+                <img
+                  src={`${ASSETS}/images/banniere-projets.webp`}
+                  srcSet={`${ASSETS}/images/banniere-projets-1080.webp 1080w, ${ASSETS}/images/banniere-projets.webp 2158w`}
+                  sizes="(max-width: 1360px) 100vw, 1248px"
+                  width={2158}
+                  height={357}
+                  alt="Cinq maisons conçues par Warren AYITOU, au milieu de la végétation tropicale : « In questioning space, we redefine habit… for architecture begins as art. »"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </figure>
             </div>
             <div className="bento">
               {bento.map((p, i) => (

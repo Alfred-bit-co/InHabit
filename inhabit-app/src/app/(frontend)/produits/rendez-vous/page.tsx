@@ -12,17 +12,18 @@ export const metadata: Metadata = {
 
 export default async function AppointmentPage() {
   const payload = await getPayloadClient()
-  const settings = await payload.findGlobal({ slug: 'appointment-settings' })
-
   const today = toISODate(new Date())
-  const upcoming = await payload.find({
-    collection: 'appointments',
-    where: { and: [{ date: { greater_than_equal: today } }, { status: { not_equals: 'annule' } }] },
-    limit: 0,
-    pagination: false,
-    depth: 0,
-    select: { date: true, slot: true },
-  })
+  const [settings, upcoming] = await Promise.all([
+    payload.findGlobal({ slug: 'appointment-settings' }),
+    payload.find({
+      collection: 'appointments',
+      where: { and: [{ date: { greater_than_equal: today } }, { status: { not_equals: 'annule' } }] },
+      limit: 0,
+      pagination: false,
+      depth: 0,
+      select: { date: true, slot: true },
+    }),
+  ])
   const booked = new Set(upcoming.docs.map((a) => `${a.date} ${a.slot}`))
   const days = computeAvailability(settings, booked)
 

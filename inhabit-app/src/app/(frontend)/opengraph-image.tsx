@@ -8,15 +8,30 @@ export const alt = 'InHabit_Archi — Architecture begins as art.'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-/** Police du site (Urbanist) ; si Google Fonts ne répond pas, l'image est générée avec la police par défaut. */
-async function urbanist(weight: number): Promise<ArrayBuffer | null> {
-  try {
-    const css = await (await fetch(`https://fonts.googleapis.com/css2?family=Urbanist:wght@${weight}`)).text()
-    const url = css.match(/src: url\((.+?)\) format\('(?:opentype|truetype)'\)/)?.[1]
-    return url ? await (await fetch(url)).arrayBuffer() : null
-  } catch {
-    return null
+/**
+ * Police du site (Urbanist) ; si Google Fonts ne répond pas (3 s max), l'image est générée
+ * avec la police par défaut. Gardée en mémoire : téléchargée une fois par serveur, pas à chaque partage.
+ */
+const fontCache = new Map<number, Promise<ArrayBuffer | null>>()
+const get = (url: string) => fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(3000) })
+
+function urbanist(weight: number): Promise<ArrayBuffer | null> {
+  let font = fontCache.get(weight)
+  if (!font) {
+    font = (async () => {
+      try {
+        const css = await (await get(`https://fonts.googleapis.com/css2?family=Urbanist:wght@${weight}`)).text()
+        const url = css.match(/src: url\((.+?)\) format\('(?:opentype|truetype)'\)/)?.[1]
+        return url ? await (await get(url)).arrayBuffer() : null
+      } catch {
+        return null
+      }
+    })()
+    // Un échec n'est pas gardé : on réessaiera au prochain partage
+    font.then((f) => f || fontCache.delete(weight))
+    fontCache.set(weight, font)
   }
+  return font
 }
 
 export default async function Image() {

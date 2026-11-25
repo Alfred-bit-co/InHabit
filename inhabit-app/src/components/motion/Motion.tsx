@@ -43,17 +43,26 @@ export function Motion() {
       els.forEach((el) => el.classList.add('in'))
       return
     }
+    // Un élément [data-reveal="clip"] est entièrement masqué par son clip-path avant l'apparition :
+    // le navigateur le considère alors comme invisible et ne le signale jamais à l'écran
+    // (les photos de projets ne s'affichaient pas). On observe donc son parent, qui n'est pas masqué.
+    const targets = new Map<Element, HTMLElement[]>()
+    els.forEach((el) => {
+      const watched = (el.dataset.reveal === 'clip' && el.parentElement) || el
+      targets.set(watched, [...(targets.get(watched) ?? []), el])
+    })
     const io = new IntersectionObserver(
       (entries) =>
         entries.forEach((e) => {
           if (e.isIntersecting) {
-            e.target.classList.add('in')
+            targets.get(e.target)?.forEach((el) => el.classList.add('in'))
             io.unobserve(e.target)
           }
         }),
-      { rootMargin: '0px 0px -8% 0px', threshold: 0.05 },
+      // threshold 0 : un parent très haut (grille de projets) n'atteint pas toujours 5 % à l'écran
+      { rootMargin: '0px 0px -8% 0px', threshold: 0 },
     )
-    els.forEach((el) => io.observe(el))
+    targets.forEach((_, watched) => io.observe(watched))
     return () => io.disconnect()
   }, [pathname])
 
