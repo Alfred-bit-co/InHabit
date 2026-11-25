@@ -1,6 +1,6 @@
 import type { CollectionAfterChangeHook, CollectionConfig } from 'payload'
 import { adminOnly } from '../access'
-import { getAdminEmail, safeSend } from '../hooks/notify'
+import { afterResponse, getAdminEmail, safeSend } from '../hooks/notify'
 import { emailTable, escapeHtml } from '../lib/escape'
 import { CURRENCIES, formatMoney } from '../lib/payments/money'
 
@@ -27,23 +27,29 @@ const paidMail: CollectionAfterChangeHook = async ({ doc, previousDoc, req }) =>
   const readLine = doc.grantsBookAccess
     ? `<p style="font-family:Arial,sans-serif">La lecture en ligne est ouverte dans votre espace membre : <a href="${site}/espace-membre">${site}/espace-membre</a> (connectez-vous avec votre compte).</p>`
     : ''
-  await safeSend(req, {
-    to: doc.email,
-    subject: `Votre paiement est confirmé — ${doc.label}`,
-    html: `<p style="font-family:Arial,sans-serif">Bonjour${doc.customerName ? ` ${escapeHtml(doc.customerName)}` : ''},</p><p style="font-family:Arial,sans-serif">Merci ! Votre paiement de <strong>${escapeHtml(total)}</strong> pour <strong>${escapeHtml(doc.label)}</strong> est bien reçu (référence ${escapeHtml(doc.reference)}).</p>${readLine}${signature}`,
-  })
-  await safeSend(req, {
-    to: await getAdminEmail(req),
-    subject: `[InHabit] Nouveau paiement — ${doc.label}`,
-    html: emailTable([
-      ['Référence', doc.reference],
-      ['Produit', doc.label],
-      ['Montant', total],
-      ['Client', doc.customerName],
-      ['Email', doc.email],
-      ['Livraison', doc.shippingAddress],
+  const adminEmail = await getAdminEmail(req)
+  // Envoyés en parallèle, après la réponse : la page « Merci » s'affiche sans attendre les emails
+  await afterResponse(() =>
+    Promise.all([
+      safeSend(req, {
+        to: doc.email,
+        subject: `Votre paiement est confirmé — ${doc.label}`,
+        html: `<p style="font-family:Arial,sans-serif">Bonjour${doc.customerName ? ` ${escapeHtml(doc.customerName)}` : ''},</p><p style="font-family:Arial,sans-serif">Merci ! Votre paiement de <strong>${escapeHtml(total)}</strong> pour <strong>${escapeHtml(doc.label)}</strong> est bien reçu (référence ${escapeHtml(doc.reference)}).</p>${readLine}${signature}`,
+      }),
+      safeSend(req, {
+        to: adminEmail,
+        subject: `[InHabit] Nouveau paiement — ${doc.label}`,
+        html: emailTable([
+          ['Référence', doc.reference],
+          ['Produit', doc.label],
+          ['Montant', total],
+          ['Client', doc.customerName],
+          ['Email', doc.email],
+          ['Livraison', doc.shippingAddress],
+        ]),
+      }),
     ]),
-  })
+  )
   return doc
 }
 

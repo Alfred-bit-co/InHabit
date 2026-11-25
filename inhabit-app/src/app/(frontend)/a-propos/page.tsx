@@ -14,8 +14,7 @@ export const metadata: Metadata = {
 export default async function AboutPage({ searchParams }: { searchParams: Promise<{ motif?: string }> }) {
   const { motif } = await searchParams
   const payload = await getPayloadClient()
-  const settings = await getSettings()
-  const about = await payload.findGlobal({ slug: 'about', depth: 1 })
+  const [settings, about] = await Promise.all([getSettings(), payload.findGlobal({ slug: 'about', depth: 1 })])
   const founder = about.founder
   const defaultReason = CONTACT_REASONS.some((r) => r.value === motif) ? motif : undefined
 

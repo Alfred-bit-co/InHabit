@@ -1,3 +1,4 @@
+import { after } from 'next/server'
 import type { CollectionAfterChangeHook, PayloadRequest } from 'payload'
 
 type Mail = { to: string; subject: string; html: string }
@@ -22,8 +23,22 @@ export async function safeSend(req: PayloadRequest, mail: Mail) {
 }
 
 /**
+ * Lance une tâche APRÈS la réponse au visiteur (Vercel garde la fonction active
+ * jusqu'à la fin de la tâche). Hors d'une requête (script de seed…), on attend simplement.
+ */
+export async function afterResponse(task: () => Promise<unknown>) {
+  try {
+    after(task)
+  } catch {
+    await task()
+  }
+}
+
+/**
  * À la création d'une demande : prévient l'administrateur et,
  * si `confirmation` est fourni, envoie un accusé de réception au visiteur.
+ * Les emails partent en parallèle et après la réponse : le visiteur n'attend
+ * plus le serveur d'emails (plusieurs secondes) pour voir « Merci ».
  */
 export const notifyOnCreate =
   (
@@ -34,8 +49,9 @@ export const notifyOnCreate =
   async ({ doc, operation, req }) => {
     if (operation !== 'create') return doc
     const adminEmail = await getAdminEmail(req)
-    await safeSend(req, { to: adminEmail, subject: `[InHabit] ${label}`, html: summary(doc) })
+    const mails: Mail[] = [{ to: adminEmail, subject: `[InHabit] ${label}`, html: summary(doc) }]
     const mail = confirmation?.(doc)
-    if (mail) await safeSend(req, mail)
+    if (mail) mails.push(mail)
+    await afterResponse(() => Promise.all(mails.map((m) => safeSend(req, m))))
     return doc
   }

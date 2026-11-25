@@ -15,9 +15,8 @@ import { fetchChannelVideos, fromCollection, type YtVideo } from '@/lib/youtube'
 
 export default async function HomePage() {
   const payload = await getPayloadClient()
-  const settings = await getSettings()
-
-  const [home, book, coaching, rdv, news, projects, events, featuredVideo, latestSaved, allProjects] = await Promise.all([
+  const [settings, home, book, coaching, rdv, news, projects, events, featuredVideo, latestSaved, allProjects] = await Promise.all([
+    getSettings(),
     payload.findGlobal({ slug: 'home', depth: 1 }),
     payload.findGlobal({ slug: 'book', depth: 1 }),
     payload.findGlobal({ slug: 'coaching', depth: 0 }),
