@@ -23,7 +23,7 @@ import { Appointments, CoachingBookings, ContactMessages, TopicSuggestions } fro
 import { Users } from './collections/Users'
 import { Videos, VideoThemes } from './collections/Videos'
 import { MAX_UPLOAD_BYTES, privateBucket, s3ClientConfig, s3Enabled } from './lib/s3'
-import { AboutPage, AppointmentSettings, Book, Coaching, HomePage, SiteSettings, YoutubePage } from './globals'
+import { AboutPage, AppointmentSettings, Book, Coaching, HomePage, ProductsPage, SiteSettings, YoutubePage } from './globals'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -173,7 +173,7 @@ export default buildConfig({
     Members,
     Users,
   ],
-  globals: [HomePage, YoutubePage, AboutPage, Book, Coaching, AppointmentSettings, SiteSettings],
+  globals: [HomePage, YoutubePage, AboutPage, ProductsPage, Book, Coaching, AppointmentSettings, SiteSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },

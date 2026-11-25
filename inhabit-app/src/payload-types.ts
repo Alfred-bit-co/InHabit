@@ -120,6 +120,7 @@ export interface Config {
     home: Home;
     'youtube-page': YoutubePage;
     about: About;
+    'products-page': ProductsPage;
     book: Book;
     coaching: Coaching;
     'appointment-settings': AppointmentSetting;
@@ -129,6 +130,7 @@ export interface Config {
     home: HomeSelect<false> | HomeSelect<true>;
     'youtube-page': YoutubePageSelect<false> | YoutubePageSelect<true>;
     about: AboutSelect<false> | AboutSelect<true>;
+    'products-page': ProductsPageSelect<false> | ProductsPageSelect<true>;
     book: BookSelect<false> | BookSelect<true>;
     coaching: CoachingSelect<false> | CoachingSelect<true>;
     'appointment-settings': AppointmentSettingsSelect<false> | AppointmentSettingsSelect<true>;
@@ -1422,6 +1424,41 @@ export interface About {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products-page".
+ */
+export interface ProductsPage {
+  id: number;
+  eyebrow?: string | null;
+  title?: string | null;
+  titleAccent?: string | null;
+  intro?: string | null;
+  /**
+   * Les cartes s’affichent dans cet ordre, numérotées automatiquement (01, 02…).
+   */
+  products?:
+    | {
+        kind: 'livre' | 'accompagnement' | 'rendez-vous' | 'autre';
+        visible?: boolean | null;
+        label?: string | null;
+        title?: string | null;
+        description?: string | null;
+        image?: (number | null) | Media;
+        price?: string | null;
+        priceNote?: string | null;
+        buttonLabel?: string | null;
+        buttonStyle?: ('beige' | 'accent') | null;
+        /**
+         * Une page du site (ex. /a-propos#contact) ou une adresse complète (ex. https://wa.me/229…). Les adresses externes s’ouvrent dans un nouvel onglet. Sans lien, la carte s’affiche sans bouton.
+         */
+        link?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "book".
  */
 export interface Book {
@@ -1709,6 +1746,35 @@ export interface AboutSelect<T extends boolean = true> {
         name?: T;
         url?: T;
         logo?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products-page_select".
+ */
+export interface ProductsPageSelect<T extends boolean = true> {
+  eyebrow?: T;
+  title?: T;
+  titleAccent?: T;
+  intro?: T;
+  products?:
+    | T
+    | {
+        kind?: T;
+        visible?: T;
+        label?: T;
+        title?: T;
+        description?: T;
+        image?: T;
+        price?: T;
+        priceNote?: T;
+        buttonLabel?: T;
+        buttonStyle?: T;
+        link?: T;
         id?: T;
       };
   updatedAt?: T;

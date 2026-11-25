@@ -23,6 +23,7 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BoolCell as BoolCell_938863260fd5b13f39d20ec7636128f2 } from '../../../components/admin/BoolCell'
 import { Description as Description_560897b850a27ca1a84412d88f8ba212 } from '../../../components/admin/Description'
+import { ProductRowLabel as ProductRowLabel_33c7d729a5c87a829199b4bc61c7085b } from '../../../components/admin/ProductRowLabel'
 import { Avatar as Avatar_80ebcb12978a9db9a1c04af0af89c7ec } from '../../../components/admin/Graphics'
 import { Icon as Icon_80ebcb12978a9db9a1c04af0af89c7ec } from '../../../components/admin/Graphics'
 import { Logo as Logo_80ebcb12978a9db9a1c04af0af89c7ec } from '../../../components/admin/Graphics'
@@ -57,6 +58,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "/components/admin/BoolCell#BoolCell": BoolCell_938863260fd5b13f39d20ec7636128f2,
   "/components/admin/Description#Description": Description_560897b850a27ca1a84412d88f8ba212,
+  "/components/admin/ProductRowLabel#ProductRowLabel": ProductRowLabel_33c7d729a5c87a829199b4bc61c7085b,
   "/components/admin/Graphics#Avatar": Avatar_80ebcb12978a9db9a1c04af0af89c7ec,
   "/components/admin/Graphics#Icon": Icon_80ebcb12978a9db9a1c04af0af89c7ec,
   "/components/admin/Graphics#Logo": Logo_80ebcb12978a9db9a1c04af0af89c7ec,
