@@ -235,6 +235,7 @@ const nav = [
   { label: 'Actualités', href: col('news') },
   { label: 'Projets', href: col('projects') },
   { label: 'Vidéos', href: col('videos') },
+  { label: 'Produits', href: glob('products-page') },
   { label: 'Livre', href: glob('book') },
   { label: 'Accompagnement', href: glob('coaching') },
   { label: 'Rendez-vous', href: glob('appointment-settings') },

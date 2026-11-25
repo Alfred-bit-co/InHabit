@@ -354,6 +354,150 @@ export const Book: GlobalConfig = {
   ],
 }
 
+/* ───────────── Page Produits ───────────── */
+
+/** Produits déjà proposés par le site : leurs textes par défaut viennent de leur propre page. */
+export const PRODUCT_KINDS = [
+  { label: 'Livre CONCEPT (page du livre)', value: 'livre' },
+  { label: 'Accompagnement CONCEPT (page de réservation)', value: 'accompagnement' },
+  { label: 'Rendez-vous gratuit (page des créneaux)', value: 'rendez-vous' },
+  { label: 'Autre produit ou service (lien libre)', value: 'autre' },
+] as const
+
+const isLink = (v: unknown) =>
+  !v || /^(\/(?!\/)|https?:\/\/|mailto:|tel:)/i.test(String(v).trim())
+    ? true
+    : 'Indiquez une page du site (commence par /) ou une adresse complète (https://…, mailto:, tel:).'
+
+export const ProductsPage: GlobalConfig = {
+  slug: 'products-page',
+  label: 'Page Produits',
+  admin: {
+    group: 'Mon site',
+    hideAPIURL: true,
+    components: {
+      elements: {
+        Description: {
+          path: '/components/admin/Description#Description',
+          clientProps: {
+            text: 'La page « Produits & services » : son titre et ses cartes. Ajoutez, retirez, masquez ou réordonnez les produits (glisser-déposer). Pour le livre, l’accompagnement et le rendez-vous, un champ laissé vide reprend le texte de leur propre page.',
+          },
+        },
+      },
+    },
+  },
+  access,
+  fields: [
+    {
+      type: 'collapsible',
+      label: 'Haut de la page',
+      admin: { initCollapsed: true },
+      fields: [
+        { name: 'eyebrow', type: 'text', label: 'Petit titre', defaultValue: 'Produits & services' },
+        {
+          type: 'row',
+          fields: [
+            { name: 'title', type: 'text', label: 'Titre', defaultValue: 'Lire, apprendre,' },
+            {
+              name: 'titleAccent',
+              type: 'text',
+              label: 'Fin du titre (en couleur)',
+              defaultValue: 'construire',
+            },
+          ],
+        },
+        {
+          name: 'intro',
+          type: 'textarea',
+          label: 'Texte d’introduction',
+          defaultValue: 'Des publications et des accompagnements pour développer une pensée architecturale juste.',
+        },
+      ],
+    },
+    {
+      name: 'products',
+      type: 'array',
+      label: 'Produits affichés',
+      labels: { singular: 'Produit', plural: 'Produits' },
+      admin: {
+        initCollapsed: true,
+        description: 'Les cartes s’affichent dans cet ordre, numérotées automatiquement (01, 02…).',
+        components: { RowLabel: '/components/admin/ProductRowLabel#ProductRowLabel' },
+      },
+      defaultValue: [
+        { kind: 'livre', visible: true, label: 'Publication', buttonStyle: 'beige' },
+        { kind: 'accompagnement', visible: true, label: 'Service payant', buttonStyle: 'accent' },
+        { kind: 'rendez-vous', visible: true, label: 'Service gratuit', buttonStyle: 'beige' },
+      ],
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'kind',
+              type: 'select',
+              label: 'Type de produit',
+              required: true,
+              defaultValue: 'autre',
+              options: [...PRODUCT_KINDS],
+            },
+            {
+              name: 'visible',
+              type: 'checkbox',
+              label: 'Affiché sur le site',
+              defaultValue: true,
+              admin: { style: { alignSelf: 'flex-end' } },
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            { name: 'label', type: 'text', label: 'Étiquette (ex. Publication, Service gratuit)' },
+            { name: 'title', type: 'text', label: 'Nom du produit' },
+          ],
+        },
+        { name: 'description', type: 'textarea', label: 'Description courte' },
+        { name: 'image', type: 'upload', relationTo: 'media', label: 'Image (facultative)' },
+        {
+          type: 'row',
+          fields: [
+            { name: 'price', type: 'text', label: 'Prix affiché (ex. 45 000 FCFA, Gratuit)' },
+            { name: 'priceNote', type: 'text', label: 'Précision (ex. 4 semaines · places limitées)' },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            { name: 'buttonLabel', type: 'text', label: 'Texte du bouton' },
+            {
+              name: 'buttonStyle',
+              type: 'select',
+              label: 'Couleur du bouton',
+              defaultValue: 'beige',
+              options: [
+                { label: 'Discret (beige)', value: 'beige' },
+                { label: 'Mis en avant (terre cuite)', value: 'accent' },
+              ],
+            },
+          ],
+        },
+        {
+          name: 'link',
+          type: 'text',
+          label: 'Lien du bouton',
+          validate: isLink,
+          admin: {
+            description:
+              'Une page du site (ex. /a-propos#contact) ou une adresse complète (ex. https://wa.me/229…). Les adresses externes s’ouvrent dans un nouvel onglet. Sans lien, la carte s’affiche sans bouton.',
+            condition: (_, sibling) => sibling?.kind === 'autre',
+          },
+        },
+      ],
+    },
+  ],
+}
+
 /* ───────────── Accompagnement CONCEPT ───────────── */
 
 export const Coaching: GlobalConfig = {
