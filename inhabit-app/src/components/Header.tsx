@@ -31,15 +31,27 @@ export function Header() {
     setOpen(false)
   }
 
-  // Fond « verre dépoli » après le haut de page, masqué quand on descend
+  // Fond « verre dépoli » après le haut de page, masqué quand on descend.
+  // Le défilement fluide (Lenis) produit de tout petits pas en fin de course :
+  // on compare donc à un point d'ancrage, pas à l'image précédente, sinon le
+  // dernier petit pas ré-affiche systématiquement l'en-tête.
   useEffect(() => {
-    let last = window.scrollY
+    let anchor = window.scrollY
     const onScroll = () => {
       const y = window.scrollY
       setScrolled(y > 24)
-      setHidden(y > 400 && y > last + 4)
-      if (y < last - 4) setHidden(false)
-      last = y
+      if (y <= 400) {
+        setHidden(false)
+        anchor = y
+        return
+      }
+      if (y > anchor + 8) {
+        setHidden(true)
+        anchor = y
+      } else if (y < anchor - 8) {
+        setHidden(false)
+        anchor = y
+      }
     }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -50,7 +62,13 @@ export function Header() {
     if (!open) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    // La page derrière le menu mobile ne défile plus tant qu'il est ouvert
+    const html = document.documentElement
+    html.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      html.style.overflow = ''
+    }
   }, [open])
 
   const cls = ['site-header', scrolled && 'scrolled', hidden && !open && 'hidden', open && 'menu-open']
@@ -59,9 +77,16 @@ export function Header() {
 
   return (
     <>
-      <header className={cls}>
+      {/* data-lenis-prevent : la molette sur le menu ouvert ne fait pas défiler la page */}
+      <header className={cls} data-lenis-prevent={open || undefined}>
         <div className="container">
-          <div className="header-shell">
+          {/* Tout clic sur un lien ferme le menu, y compris vers la page en cours ou une ancre */}
+          <div
+            className="header-shell"
+            onClick={(e) => {
+              if ((e.target as HTMLElement).closest('a')) setOpen(false)
+            }}
+          >
             <Logo />
             <nav id="main-nav" className={`main-nav${open ? ' open' : ''}`} aria-label="Navigation principale">
               <ul>
