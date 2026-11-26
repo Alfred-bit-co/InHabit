@@ -2,11 +2,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { GoogleLogo } from '@/components/member/GoogleLogo'
+import { SocialButtons } from '@/components/member/SocialButtons'
 import { PayButton } from '@/components/payments/PayButton'
 import { PayNotice } from '@/components/payments/PayNotice'
 import { hasBookAccess } from '@/lib/bookAccess'
-import { googleEnabled } from '@/lib/google'
 import { firstName, getMember } from '@/lib/member'
 import { getPayloadClient, isMedia, mediaAlt, mediaUrl } from '@/lib/payload'
 import { checkoutPath, isCardPayable } from '@/lib/payments/editions'
@@ -107,12 +106,9 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
                     <Link href={login()} className="btn btn-beige">
                       J’ai déjà un compte
                     </Link>
-                    {googleEnabled() && (
-                      <a href={`/espace-membre/google?${new URLSearchParams({ suite: here })}`} className="btn btn-google">
-                        <GoogleLogo /> Continuer avec Google
-                      </a>
-                    )}
                   </div>
+                  <span className="auth-or checkout-or">ou</span>
+                  <SocialButtons next={here} googleLabel="Continuer avec Google" />
                   <p className="form-note" style={{ margin: '12px 0 0' }}>
                     Une fois connecté, vous revenez directement ici pour payer.
                   </p>

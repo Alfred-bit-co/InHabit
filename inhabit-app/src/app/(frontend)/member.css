@@ -999,15 +999,95 @@
   gap: 10px;
   margin-top: 18px;
 }
-.btn-google {
+/* Connexion sociale : 4 boutons sur une ligne si la place le permet, sinon 2 × 2 */
+.social-wrap {
+  container-type: inline-size;
+}
+.social-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+@container (max-width: 380px) {
+  .social-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.social-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 6px;
+  min-height: 78px;
+  padding: 12px 6px;
+  border: 0;
+  border-radius: 14px;
   background: var(--paper);
   color: var(--ink);
   box-shadow: inset 0 0 0 1px var(--line);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.1;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    box-shadow 0.25s,
+    transform 0.25s;
 }
-.btn-google:hover {
+.social-btn:hover {
   box-shadow: inset 0 0 0 1px var(--ink-2);
+}
+.social-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 14px;
+}
+.social-btn svg {
+  flex: none;
+}
+.social-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.social-soon {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--sand);
+  color: var(--ink-2);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+/* Pas encore branchés : visibles mais inactifs */
+.social-btn[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.social-btn[aria-disabled='true']:hover {
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+/* Apple et X : noir en mode clair, blanc en mode sombre (règles de marque) */
+.social-mono {
+  color: #000;
+}
+:root[data-theme='dark'] .social-mono {
+  color: #fff;
+}
+:root[data-theme='dark'] .social-btn:hover:not([aria-disabled='true']) {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+:root[data-theme='dark'] .social-soon {
+  color: var(--ink);
+}
+/* Page de paiement : séparateur « ou » entre les boutons de compte et la connexion sociale */
+.checkout-or {
+  margin: 14px 0 10px;
 }
 .auth-or {
   display: flex;
