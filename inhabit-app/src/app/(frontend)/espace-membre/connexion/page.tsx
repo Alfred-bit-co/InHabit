@@ -3,8 +3,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { LoginForm, RegisterForm } from '@/components/member/AuthForms'
 import { AuthShell } from '@/components/member/AuthShell'
-import { GoogleLogo } from '@/components/member/GoogleLogo'
-import { googleEnabled } from '@/lib/google'
+import { SocialButtons } from '@/components/member/SocialButtons'
 import { getMember, safeNext } from '@/lib/member'
 
 export const metadata: Metadata = { title: 'Espace membre — connexion', robots: { index: false } }
@@ -23,7 +22,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if (await getMember()) redirect(next)
 
   const register = params.mode === 'inscription'
-  const google = googleEnabled()
   const q = (mode?: string) =>
     `/espace-membre/connexion?${new URLSearchParams({ ...(mode ? { mode } : {}), ...(params.suite ? { suite: next } : {}) })}`
 
@@ -49,14 +47,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             Créez votre compte, puis choisissez votre abonnement : l’espace membre et la lecture du livre s’ouvrent dès
             que le paiement est confirmé.
           </p>
-          {google && <GoogleButton next={next} label="Créer mon compte avec Google" />}
+          <SocialAuth next={next} googleLabel="Créer mon compte avec Google" />
           <RegisterForm next={next} email={params.email} />
         </>
       ) : (
         <>
           <h1 className="auth-title">Bon retour.</h1>
           <p className="muted">Connectez-vous pour reprendre votre lecture.</p>
-          {google && <GoogleButton next={next} label="Continuer avec Google" />}
+          <SocialAuth next={next} googleLabel="Continuer avec Google" />
           <LoginForm next={next} email={params.email} />
         </>
       )}
@@ -64,13 +62,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   )
 }
 
-/** Bouton Google (simple lien : la suite se passe côté serveur). */
-function GoogleButton({ next, label }: { next: string; label: string }) {
+/** Connexion sociale (Google actif, Apple / Facebook / X bientôt), puis le séparateur « ou ». */
+function SocialAuth({ next, googleLabel }: { next: string; googleLabel: string }) {
   return (
     <div className="auth-google">
-      <a href={`/espace-membre/google?${new URLSearchParams({ suite: next })}`} className="btn btn-google">
-        <GoogleLogo /> {label}
-      </a>
+      <SocialButtons next={next} googleLabel={googleLabel} />
       <p className="form-note" style={{ margin: 0 }}>
         En continuant avec Google, vous acceptez la <Link href="/confidentialite">politique de confidentialité</Link>.
       </p>
